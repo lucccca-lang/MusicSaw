@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sistema de gestion</title>
+    
+    <link rel="icon" href="TU_LOGO_AQUI.png">
+    <link rel="apple-touch-icon" href="TU_LOGO_AQUI.png">
+
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #ffffff;
+            --text-muted: #aaaaaa;
+            --accent: #bb86fc;
+            --accent-hover: #9965f4;
+            --danger: #ff4c4c;
+        }
+        
+        .light-mode {
+            --bg-color: #f4f4f9;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --accent: #6200ea;
+            --accent-hover: #3700b3;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        h1, h2 { text-align: center; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; }
+        
+        .container { max-width: 900px; margin: 0 auto; }
+
+        /* Buscador Global */
+        .global-search-wrapper { position: relative; margin-bottom: 20px; }
+        .global-search-input {
+            width: 100%; padding: 15px; border-radius: 25px; border: 2px solid var(--accent);
+            background-color: var(--card-bg); color: var(--text-main); font-size: 1.1rem;
+            box-sizing: border-box; outline: none; transition: 0.3s;
+        }
+        .global-search-input:focus { box-shadow: 0 0 10px rgba(187, 134, 252, 0.5); }
+        .search-results {
+            position: absolute; top: 100%; left: 0; right: 0; background-color: var(--card-bg);
+            border-radius: 12px; margin-top: 5px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            max-height: 300px; overflow-y: auto; z-index: 1000; display: none; border: 1px solid #444;
+        }
+        .search-item { padding: 12px 15px; border-bottom: 1px solid #333; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .search-item:hover { background-color: #2a2a2a; }
+        .search-item:last-child { border-bottom: none; }
+        .search-badge { background: #333; padding: 3px 8px; border-radius: 12px; font-size: 0.7em; color: var(--accent); }
+        
+        /* Menú Superior */
+        .top-nav {
+            display: flex; justify-content: center; gap: 8px; margin-bottom: 20px;
+            background-color: var(--card-bg); padding: 15px; border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3); flex-wrap: wrap;
+        }
+        .nav-btn {
+            background-color: transparent; color: var(--text-main);
+            border: 2px solid transparent; padding: 10px 15px;
+            border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.95rem; transition: 0.2s;
+        }
+        .nav-btn:hover { background-color: rgba(255,255,255,0.1); }
+        .nav-btn.active { border-bottom: 2px solid var(--accent); color: var(--accent); }
+        
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        .card { background-color: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+
+        /* Formulario */
+        .form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
+        .form-row { display: flex; gap: 10px; align-items: center; }
+        .form-row input { flex: 1; }
+        label { margin-bottom: 5px; font-weight: bold; font-size: 0.9em; color: var(--accent); }
+        input[type="text"], input[type="number"], input[type="url"], select {
+            padding: 10px; border-radius: 6px; border: 1px solid #555;
+            background-color: var(--bg-color); color: var(--text-main); font-size: 1rem;
+        }
+        .submit-btn {
+            background-color: var(--accent); color: #fff; border: none; padding: 15px;
+            border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px;
+        }
+        .guest-box { background-color: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px dashed #555; }
+        .btn-small { background-color: #333; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.9em; margin-top: 5px; }
+        .btn-danger { background-color: var(--danger); color: white; width: 100%; padding: 15px; font-size: 1.1em; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 20px; }
+
+        /* Vistas, Listas */
+        .group-header {
+            display: flex; align-items: center; gap: 15px; flex-wrap: wrap;
+            background-color: #2a2a2a; padding: 10px 15px; border-radius: 8px;
+            font-size: 1.2rem; font-weight: bold; color: var(--accent); margin-top: 20px;
+        }
+        .artist-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); background-color: #444; }
+        .item-card { padding: 15px; border-bottom: 1px solid #444; margin-left: 20px; line-height: 1.5; position: relative; }
+        .item-card:last-child { border-bottom: none; }
+        .guest-badge { background-color: #c62828; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-right: 5px; }
+        .dots { letter-spacing: 2px; font-size: 0.9em; margin-left: 10px; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 20px; }
+        .video-btn { color: var(--accent); text-decoration: underline; font-size: 0.9em; margin-left: 10px; background: transparent; display: inline-block; }
+        
+        .edit-btn { position: absolute; top: 15px; right: 10px; background: none; border: none; cursor: pointer; font-size: 1.2rem; opacity: 0.1; transition: 0.3s; }
+        .edit-btn:hover { opacity: 1; }
+        .edit-btn-visible { background: var(--accent); color: #000; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85em; }
+
+        /* Estilos para Acordeones en Detalle de Búsqueda */
+        .detail-accordion { background-color: #252525; border-radius: 8px; margin: 10px 0; overflow: hidden; }
+        .detail-accordion summary { padding: 15px; font-weight: bold; cursor: pointer; background-color: #2a2a2a; color: var(--text-main); list-style: none; display: flex; justify-content: space-between; align-items: center; }
+        .detail-accordion summary::-webkit-details-marker { display: none; }
+        .detail-accordion summary::after { content: '▼'; font-size: 0.8em; color: var(--accent); }
+        .detail-accordion[open] summary::after { content: '▲'; }
+        .details-content { padding: 15px; border-top: 1px solid #444; background-color: var(--bg-color); font-size: 0.95em; }
+        .detail-sub-item { padding: 15px 0; border-bottom: 1px dashed #444; line-height: 1.6; }
+        .detail-sub-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+        /* Estadísticas y Lupa (Buscador invisible) */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-box { background-color: #2a2a2a; padding: 20px; border-radius: 12px; text-align: center; border-bottom: 4px solid var(--accent); }
+        .stat-box h3 { margin: 0 0 10px 0; font-size: 1rem; color: var(--text-muted); text-transform: uppercase; }
+        .stat-box .number { font-size: 2.5rem; font-weight: bold; color: var(--accent); margin: 0; }
+        .stat-list { background-color: #2a2a2a; padding: 15px; border-radius: 12px; margin-bottom: 15px; max-height: 400px; overflow-y: auto; }
+        .stat-list h3 { border-bottom: 1px solid #444; padding-bottom: 10px; margin-top: 0; color: var(--accent); display: flex; justify-content: space-between; align-items: center; }
+        
+        .lupa-container { display: inline-flex; align-items: center; background: transparent; border-radius: 20px; padding: 4px 8px; transition: 0.3s background; }
+        .lupa-container:focus-within { background: rgba(255,255,255,0.1); }
+        .lupa-icon { cursor: pointer; font-size: 1rem; margin-right: 5px; color: var(--text-muted); }
+        .lupa-input { width: 0; opacity: 0; border: none; background: transparent; color: var(--text-main); transition: 0.3s all; padding: 0; outline: none; font-size: 0.9rem; }
+        .lupa-container:focus-within .lupa-input, .lupa-input:focus, .lupa-input:not(:placeholder-shown) { width: 130px; opacity: 1; padding: 0 5px; }
+
+        .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #444; }
+        .stat-row:last-child { border-bottom: none; }
+
+        /* Celular */
+        @media (max-width: 600px) {
+            .top-nav { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 5px; position: sticky; top: 0; z-index: 100; border-radius: 0 0 12px 12px; padding: 10px; }
+            .nav-btn { flex: 1 1 30%; font-size: 0.8rem; padding: 10px 2px; text-align: center; border: 1px solid #333; }
+            .nav-btn.active { background-color: var(--accent); color: #000; border: none; }
+            .nav-btn[onclick="showPanel('panel-estadisticas')"], .nav-btn[onclick="showPanel('panel-datos')"], .nav-btn[onclick="toggleNightMode()"] { flex: 1 1 100%; margin-top: 5px; }
+            .edit-btn { opacity: 0.3; }
+            .detail-accordion summary { flex-direction: column; align-items: flex-start; gap: 5px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>sistema de gestion</h1>
+
+    <div class="global-search-wrapper">
+        <input type="text" id="globalSearchInput" class="global-search-input" placeholder="🔍 Buscar canción, cantante o lugar..." autocomplete="off" oninput="handleGlobalSearch()">
+        <div id="globalSearchResults" class="search-results"></div>
+    </div>
+
+    <div class="top-nav" id="mainNav">
+        <button class="nav-btn active" onclick="showPanel('panel-cargar')">Cargar</button>
+        <button class="nav-btn" onclick="showPanel('panel-artistas')">Artistas</button>
+        <button class="nav-btn" onclick="showPanel('panel-canciones')">Canciones</button>
+        <button class="nav-btn" onclick="showPanel('panel-anios')">Años</button>
+        <button class="nav-btn" onclick="showPanel('panel-lugares')">Lugares</button>
+        <button class="nav-btn" onclick="showPanel('panel-estadisticas')">Estadísticas</button>
+        <button class="nav-btn" onclick="showPanel('panel-datos')">Datos / Opciones</button>
+        <button class="nav-btn" onclick="toggleNightMode()">🌓 Modo Noche</button>
+    </div>
+
+    <datalist id="list-songs"></datalist>
+    <datalist id="list-artists"></datalist>
+    <datalist id="list-venues"></datalist>
+    <datalist id="list-years"></datalist>
+
+    <div id="panel-cargar" class="panel active card">
+        <form id="recordForm">
+            <input type="hidden" id="editId">
+            <div class="form-group">
+                <label>Canción</label>
+                <input type="text" id="songName" list="list-songs" required autocomplete="off" oninput="checkSongProgress()">
+            </div>
+            <div class="form-group">
+                <label>Progreso de la Canción (Global)</label>
+                <div class="form-row">
+                    <input type="number" id="progCurrent" placeholder="Grabados (ej: 2)" min="0">
+                    <span style="font-weight: bold;">/</span>
+                    <input type="number" id="progTotal" placeholder="Total (ej: 4)" min="1">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Video</label>
+                <div id="videosContainer"></div>
+                <button type="button" class="btn-small" onclick="addVideoField()">+ Añadir enlace de video</button>
+            </div>
+            <div class="form-group">
+                <label>Año</label>
+                <input type="number" id="songYear" list="list-years" required placeholder="Ej: 2024">
+            </div>
+            <div class="form-group">
+                <label>Artista Principal</label>
+                <input type="text" id="mainArtist" list="list-artists" required autocomplete="off" onblur="syncArtistImage(this)">
+                <input type="url" id="artistImg" placeholder="Link de foto del artista principal (Opcional)" style="margin-top: 5px; font-size: 0.85em;">
+            </div>
+            <div class="form-group">
+                <label>Invitados en esta canción</label>
+                <div id="guestsContainer"></div>
+                <button type="button" class="btn-small" onclick="addGuestField()">+ Añadir invitado</button>
+            </div>
+            <div class="form-group">
+                <label>Lugar</label>
+                <input type="text" id="concertVenue" list="list-venues" required autocomplete="off">
+            </div>
+            <button type="submit" class="submit-btn" id="saveBtn">Guardar Canción</button>
+        </form>
+    </div>
+
+    <div id="panel-artistas" class="panel card"><div id="artistViewList"></div></div>
+    
+    <div id="panel-canciones" class="panel card">
+        <div style="margin-bottom: 15px;">
+            <label>Filtrar por progreso:</label>
+            <select id="songProgressFilter" onchange="renderSongView()" style="background-color: var(--bg-color); color: var(--text-main); border: 1px solid #555; padding: 8px; border-radius: 6px;">
+                <option value="all">Todas las canciones</option>
+                <option value="complete">Solo Completas (Todos los puntos)</option>
+                <option value="two_or_more">Con 2 o más puntos</option>
+            </select>
+        </div>
+        <div id="songViewList"></div>
+    </div>
+    
+    <div id="panel-anios" class="panel card"><div id="yearViewList"></div></div>
+    <div id="panel-lugares" class="panel card"><div id="venueViewList"></div></div>
+
+    <div id="panel-estadisticas" class="panel card">
+        <h2>Tus Estadísticas</h2>
+        <div id="statsContainer"></div>
+    </div>
+
+    <div id="panel-datos" class="panel card">
+        <h2>Gestión de Datos</h2>
+        <div class="form-group" style="margin-top: 20px;">
+            <label>Exportar Copia de Seguridad</label>
+            <button class="submit-btn" onclick="exportData()" style="background-color: #4CAF50;">⬇️ Descargar Backup</button>
+        </div>
+        <hr style="border: 1px solid #333; margin: 30px 0;">
+        <div class="form-group">
+            <label>Importar Copia de Seguridad</label>
+            <input type="file" id="importFile" accept=".json" style="margin-bottom: 10px; color: var(--text-main);">
+            <button class="submit-btn" onclick="importData()" style="background-color: #2196F3;">⬆️ Cargar Backup</button>
+        </div>
+        <hr style="border: 1px solid #333; margin: 30px 0;">
+        <div class="form-group">
+            <label style="color: var(--danger);">Zona de Peligro</label>
+            <button class="btn-danger" onclick="clearAllData()">🗑️ Eliminar Todos los Datos</button>
+        </div>
+    </div>
+
+    <div id="panel-detalle" class="panel card">
+        <button class="nav-btn" onclick="showPanel('panel-cargar')" style="background:var(--accent); color:#000; margin-bottom:20px; width:100%; text-align:center;">⬅ Volver al menú principal</button>
+        <div id="detalleContent"></div>
+    </div>
+
+</div>
+
+<script>
+    let recordings = JSON.parse(localStorage.getItem('recitalData')) || [];
+    let artistImages = JSON.parse(localStorage.getItem('artistImagesData')) || {};
+    let songProgress = JSON.parse(localStorage.getItem('songProgressData')) || {};
+
+    const form = document.getElementById('recordForm');
+    const guestsContainer = document.getElementById('guestsContainer');
+    const videosContainer = document.getElementById('videosContainer');
+    let guestCount = 0;
+
+    function showPanel(panelId) {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        if (panelId !== 'panel-detalle') {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            const clickedBtn = event ? event.target : null;
+            if (clickedBtn && clickedBtn.classList.contains('nav-btn')) clickedBtn.classList.add('active');
+            document.getElementById('mainNav').style.display = 'flex';
+        } else {
+            document.getElementById('mainNav').style.display = 'none';
+            document.getElementById('globalSearchInput').value = '';
+            document.getElementById('globalSearchResults').style.display = 'none';
+        }
+        document.getElementById(panelId).classList.add('active');
+        renderUI();
+    }
+
+    function toggleNightMode() { document.body.classList.toggle('light-mode'); }
+
+    window.syncArtistImage = function(inputElem) {
+        const name = inputElem.value.trim();
+        if (!name) return;
+        let imgInput = (inputElem.id === 'mainArtist') ? document.getElementById('artistImg') : inputElem.nextElementSibling;
+        if (imgInput && !imgInput.value && artistImages[name]) imgInput.value = artistImages[name];
+    };
+
+    function addGuestField(name = '', img = '') {
+        guestCount++;
+        const div = document.createElement('div'); div.className = 'guest-box';
+        div.innerHTML = `<input type="text" class="guest-name" list="list-artists" placeholder="Invitado ${guestCount}" value="${name}" onblur="syncArtistImage(this)" required style="width: 100%; margin-bottom: 5px;">
+            <input type="url" class="guest-img" placeholder="Link de foto" value="${img}" style="width: 100%; font-size: 0.85em;">`;
+        guestsContainer.appendChild(div);
+    }
+
+    function addVideoField(url = '') {
+        const div = document.createElement('div'); div.className = 'form-row video-box'; div.style.marginBottom = '8px';
+        div.innerHTML = `<input type="url" class="video-input" placeholder="Enlace del video..." value="${url}">
+            <button type="button" class="btn-small" onclick="this.parentElement.remove()" style="margin-top:0;">❌</button>`;
+        videosContainer.appendChild(div);
+    }
+
+    function getNormalizedVideos(rec) {
+        let videos = [];
+        if (rec.videosArray && rec.videosArray.length > 0) videos = rec.videosArray;
+        else if (rec.videoLink) videos = [rec.videoLink];
+        return videos;
+    }
+
+    function buildVideosHtml(rec) {
+        const videos = getNormalizedVideos(rec);
+        if (videos.length === 0) return '';
+        return videos.map((vUrl, index) => `<a href="${vUrl}" target="_blank" class="video-btn">▶ Ver video ${videos.length > 1 ? (index + 1) : ''}</a>`).join(' ');
+    }
+
+    function checkSongProgress() {
+        const song = document.getElementById('songName').value.trim();
+        if(songProgress[song]) {
+            document.getElementById('progCurrent').value = songProgress[song].current || '';
+            document.getElementById('progTotal').value = songProgress[song].total || '';
+        } else {
+            document.getElementById('progCurrent').value = ''; document.getElementById('progTotal').value = '';
+        }
+    }
+
+    function getDotsHTML(songName) {
+        if(!songProgress[songName]) return '';
+        const c = parseInt(songProgress[songName].current) || 0; const t = parseInt(songProgress[songName].total) || 0;
+        if(t <= 0) return ''; let dots = '';
+        for(let i=0; i<t; i++) dots += (i < c) ? '🟢' : '⚪';
+        return `<span class="dots">${dots}</span>`;
+    }
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const mainArtist = document.getElementById('mainArtist').value.trim();
+        const mainArtistImg = document.getElementById('artistImg').value.trim();
+        const songNameInput = document.getElementById('songName').value.trim();
+        if(mainArtistImg) artistImages[mainArtist] = mainArtistImg;
+        const currP = document.getElementById('progCurrent').value; const totP = document.getElementById('progTotal').value;
+        if(currP || totP) { songProgress[songNameInput] = { current: currP, total: totP }; localStorage.setItem('songProgressData', JSON.stringify(songProgress)); }
+
+        let currentGuests = [];
+        document.querySelectorAll('.guest-box').forEach(box => {
+            const gName = box.querySelector('.guest-name').value.trim(); const gImg = box.querySelector('.guest-img').value.trim();
+            if(gName) { currentGuests.push({ name: gName }); if(gImg) artistImages[gName] = gImg; }
+        });
+
+        let currentVideos = [];
+        document.querySelectorAll('.video-input').forEach(input => { const vUrl = input.value.trim(); if(vUrl) currentVideos.push(vUrl); });
+
+        const idToSave = document.getElementById('editId').value || Date.now().toString();
+        const recordData = {
+            id: idToSave, songName: songNameInput, songYear: document.getElementById('songYear').value, mainArtist: mainArtist,
+            guestsArray: currentGuests, venue: document.getElementById('concertVenue').value.trim(), videosArray: currentVideos
+        };
+
+        const existingIndex = recordings.findIndex(r => r.id.toString() === recordData.id.toString());
+        if(existingIndex >= 0) { recordings[existingIndex] = recordData; alert('¡Actualizado!'); } 
+        else { recordings.push(recordData); alert('¡Guardado!'); }
+
+        localStorage.setItem('recitalData', JSON.stringify(recordings));
+        localStorage.setItem('artistImagesData', JSON.stringify(artistImages));
+        resetForm(); renderUI();
+    });
+
+    function resetForm() {
+        form.reset(); document.getElementById('editId').value = ''; document.getElementById('saveBtn').innerText = 'Guardar Canción';
+        guestsContainer.innerHTML = ''; videosContainer.innerHTML = ''; guestCount = 0; addVideoField();
+    }
+
+    window.editRecord = function(id) {
+        const rec = recordings.find(r => r.id.toString() === id.toString());
+        if(!rec) return;
+        document.getElementById('editId').value = rec.id; document.getElementById('songName').value = rec.songName; checkSongProgress();
+        document.getElementById('songYear').value = rec.songYear || ''; document.getElementById('mainArtist').value = rec.mainArtist;
+        document.getElementById('artistImg').value = artistImages[rec.mainArtist] || ''; document.getElementById('concertVenue').value = rec.venue;
+        
+        guestsContainer.innerHTML = ''; guestCount = 0;
+        (rec.guestsArray || []).forEach(g => addGuestField(g.name, artistImages[g.name] || ''));
+        
+        videosContainer.innerHTML = ''; const videos = getNormalizedVideos(rec);
+        if (videos.length === 0) addVideoField(); else videos.forEach(vUrl => addVideoField(vUrl));
+        
+        document.getElementById('saveBtn').innerText = 'Actualizar Grabación';
+        document.getElementById('mainNav').style.display = 'flex';
+        showPanel('panel-cargar'); window.scrollTo(0, 0);
+    };
+
+    window.handleGlobalSearch = function() {
+        const query = document.getElementById('globalSearchInput').value.toLowerCase().trim();
+        const resultsBox = document.getElementById('globalSearchResults');
+        
+        if (query.length < 2) { resultsBox.style.display = 'none'; return; }
+
+        let songs = new Set(); let artists = new Set(); let venues = new Set();
+        recordings.forEach(r => {
+            songs.add(r.songName); artists.add(r.mainArtist); venues.add(r.venue);
+            (r.guestsArray || []).forEach(g => artists.add(g.name));
+        });
+
+        let resultsHTML = '';
+        
+        [...songs].filter(s => s.toLowerCase().includes(query)).forEach(s => {
+            resultsHTML += `<div class="search-item" onclick="openDetailView('song', '${s.replace(/'/g, "\\'")}')"><span class="search-badge">🎵 Canción</span> ${s}</div>`;
+        });
+        [...artists].filter(a => a.toLowerCase().includes(query)).forEach(a => {
+            resultsHTML += `<div class="search-item" onclick="openDetailView('artist', '${a.replace(/'/g, "\\'")}')"><span class="search-badge">🎤 Artista</span> ${a}</div>`;
+        });
+        [...venues].filter(v => (v||'').toLowerCase().includes(query)).forEach(v => {
+            resultsHTML += `<div class="search-item" onclick="openDetailView('venue', '${v.replace(/'/g, "\\'")}')"><span class="search-badge">📍 Lugar</span> ${v}</div>`;
+        });
+
+        if (resultsHTML === '') resultsHTML = '<div class="search-item" style="color:#888;">No se encontraron resultados...</div>';
+        resultsBox.innerHTML = resultsHTML; resultsBox.style.display = 'block';
+    }
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.global-search-wrapper')) {
+            document.getElementById('globalSearchResults').style.display = 'none';
+        }
+    });
+
+    window.openDetailView = function(type, value) {
+        const container = document.getElementById('detalleContent');
+        let html = '';
+
+        if (type === 'song') {
+            const songRecs = recordings.filter(r => r.songName === value);
+            html += `<div class="group-header">🎵 ${value} ${getDotsHTML(value)}</div>`;
+            songRecs.forEach(perf => {
+                const guestsText = (perf.guestsArray || []).map(g => g.name).join(', ');
+                const vidsHtml = buildVideosHtml(perf);
+                html += `<div class="item-card"><button class="edit-btn" onclick="editRecord('${perf.id}')">✏️</button>
+                    Por <strong>${perf.mainArtist}</strong> ${guestsText ? `(con ${guestsText})` : ''} <br>
+                    📍 ${perf.venue} | 🗓️ ${perf.songYear || "Sin Año"}<br>${vidsHtml}</div>`;
+            });
+
+        } else if (type === 'artist') {
+            html += `<div class="group-header"><img src="${artistImages[value] || 'https://via.placeholder.com/50/333333/FFFFFF?text=🎤'}" class="artist-img"><span>${value} (Sus canciones)</span></div>`;
+            const artistSongs = {};
+            recordings.forEach(rec => {
+                const isMain = rec.mainArtist === value;
+                const isGuest = (rec.guestsArray || []).some(g => g.name === value);
+                if (isMain || isGuest) {
+                    if (!artistSongs[rec.songName]) artistSongs[rec.songName] = [];
+                    artistSongs[rec.songName].push({ ...rec, wasGuest: isGuest });
+                }
+            });
+            Object.keys(artistSongs).sort().forEach(song => {
+                html += `<details class="detail-accordion">
+                    <summary style="display: flex; align-items: center;">
+                        <span>🎵 <strong>${song}</strong> ${getDotsHTML(song)}</span>
+                        <small style="color:#aaa; margin-left:10px;">(${artistSongs[song].length} veces)</small>
+                    </summary>
+                    <div class="details-content">`;
+                artistSongs[song].forEach(perf => {
+                    const vids = buildVideosHtml(perf);
+                    html += `<div class="detail-sub-item">
+                        <button class="edit-btn-visible" onclick="editRecord('${perf.id}')" style="float:right;">✏️ Editar</button>
+                        ${perf.wasGuest ? '<span class="guest-badge">INVITADO</span> de <strong>' + perf.mainArtist + '</strong>' : '🎤 Como Artista Principal'} <br>
+                        📍 ${perf.venue} | 🗓️ ${perf.songYear || 'Sin Año'}<br>${vids}
+                    </div>`;
+                });
+                html += `</div></details>`;
+            });
+
+        } else if (type === 'venue') {
+            html += `<div class="group-header">📍 ${value} (Artistas que viste acá)</div>`;
+            const venueArtists = {};
+            recordings.filter(r => r.venue === value).forEach(rec => {
+                const addPerf = (artistName, isGuest) => {
+                    if(!venueArtists[artistName]) venueArtists[artistName] = [];
+                    venueArtists[artistName].push({ ...rec, wasGuest: isGuest });
+                };
+                addPerf(rec.mainArtist, false);
+                (rec.guestsArray || []).forEach(g => addPerf(g.name, true));
+            });
+            
+            Object.keys(venueArtists).sort().forEach(artist => {
+                const imgSrc = artistImages[artist] || 'https://via.placeholder.com/50/333333/FFFFFF?text=🎤';
+                html += `<details class="detail-accordion"><summary style="display: flex; align-items: center; justify-content: flex-start; gap: 10px;"><img src="${imgSrc}" class="artist-img" style="width: 30px; height: 30px;"> ${artist}</summary><div class="details-content">`;
+                venueArtists[artist].forEach(perf => {
+                    html += `<div class="detail-sub-item">🎵 <strong>${perf.songName}</strong> (${perf.songYear}) ${perf.wasGuest ? '<span class="guest-badge">Invitado</span>' : ''}</div>`;
+                });
+                html += `</div></details>`;
+            });
+        }
+
+        container.innerHTML = html;
+        showPanel('panel-detalle');
+    };
+
+    function renderUI() {
+        if(document.getElementById('panel-cargar').classList.contains('active')) {
+            const songs = [...new Set(recordings.map(r => r.songName))];
+            const venues = [...new Set(recordings.map(r => r.venue))];
+            const years = [...new Set(recordings.map(r => r.songYear || "Sin Año"))];
+            let allArtists = new Set(recordings.map(r => r.mainArtist));
+            recordings.forEach(r => (r.guestsArray || []).forEach(g => allArtists.add(g.name)));
+            document.getElementById('list-songs').innerHTML = songs.map(s => `<option value="${s}">`).join('');
+            document.getElementById('list-artists').innerHTML = [...allArtists].map(a => `<option value="${a}">`).join('');
+            document.getElementById('list-venues').innerHTML = venues.map(v => `<option value="${v}">`).join('');
+            document.getElementById('list-years').innerHTML = years.map(y => `<option value="${y}">`).join('');
+        }
+        
+        if(document.getElementById('panel-artistas').classList.contains('active')) renderArtistView();
+        if(document.getElementById('panel-canciones').classList.contains('active')) renderSongView();
+        if(document.getElementById('panel-anios').classList.contains('active')) renderYearView();
+        if(document.getElementById('panel-lugares').classList.contains('active')) renderVenueView();
+        if(document.getElementById('panel-estadisticas').classList.contains('active')) renderStatsView();
+    }
+
+    function renderArtistView() {
+        const container = document.getElementById('artistViewList');
+        const artistMap = {};
+        recordings.forEach(rec => {
+            const year = rec.songYear || "Sin Año";
+            if (!artistMap[rec.mainArtist]) artistMap[rec.mainArtist] = [];
+            artistMap[rec.mainArtist].push({ ...rec, role: 'main', displayYear: year });
+            (rec.guestsArray || []).forEach(g => {
+                if (!artistMap[g.name]) artistMap[g.name] = [];
+                artistMap[g.name].push({ ...rec, role: 'guest', host: rec.mainArtist, displayYear: year });
+            });
+        });
+        const sortedArtists = Object.keys(artistMap).sort();
+        container.innerHTML = sortedArtists.map(artist => {
+            const imgSrc = artistImages[artist] || 'https://via.placeholder.com/50/333333/FFFFFF?text=🎤';
+            const songsHtml = artistMap[artist].map(song => {
+                const vidsHtml = buildVideosHtml(song);
+                if (song.role === 'main') {
+                    const guestsText = (song.guestsArray || []).map(g => g.name).join(', ');
+                    return `<div class="item-card"><button class="edit-btn" onclick="editRecord('${song.id}')">✏️</button>
+                        <strong>${song.songName}</strong> (${song.displayYear}) - ${song.venue} ${vidsHtml ? `<br>${vidsHtml}` : ''}
+                        ${guestsText ? `<br><small style="color:var(--accent)">Con: ${guestsText}</small>` : ''}</div>`;
+                } else {
+                    return `<div class="item-card"><button class="edit-btn" onclick="editRecord('${song.id}')">✏️</button>
+                        <span class="guest-badge">INVITADO</span><strong>${song.songName}</strong> (${song.displayYear}) ${vidsHtml ? `<br>${vidsHtml}` : ''}<br>
+                        <small style="color:#aaa">En el recital de <strong>${song.host}</strong> (${song.venue})</small></div>`;
+                }
+            }).join('');
+            return `<div><div class="group-header"><img src="${imgSrc}" class="artist-img"><span>${artist}</span></div>${songsHtml}</div>`;
+        }).join('');
+    }
+
+    function renderSongView() {
+        const container = document.getElementById('songViewList');
+        const filterVal = document.getElementById('songProgressFilter').value;
+        const grouped = recordings.reduce((acc, curr) => { if (!acc[curr.songName]) acc[curr.songName] = []; acc[curr.songName].push(curr); return acc; }, {});
+        
+        let filteredSongs = Object.keys(grouped);
+        if (filterVal !== 'all') {
+            filteredSongs = filteredSongs.filter(song => {
+                const prog = songProgress[song] || { current: 0, total: 1 };
+                const currentP = parseInt(prog.current) || 0;
+                const totalP = parseInt(prog.total) || 1;
+
+                if (filterVal === 'complete') {
+                    return currentP >= totalP && totalP > 0;
+                } else if (filterVal === 'two_or_more') {
+                    return currentP >= 2;
+                }
+                return true;
+            });
+        }
+        filteredSongs.sort((a, b) => grouped[b].length - grouped[a].length);
+        
+        container.innerHTML = filteredSongs.map(song => {
+            const dots = getDotsHTML(song);
+            const html = grouped[song].map(perf => {
+                const guestsText = (perf.guestsArray || []).map(g => g.name).join(', ');
+                return `<div class="item-card"><button class="edit-btn" onclick="editRecord('${perf.id}')">✏️</button>
+                    Por <strong>${perf.mainArtist}</strong> ${guestsText ? `(con ${guestsText})` : ''} en ${perf.venue} (${perf.songYear || "Sin Año"})<br>${buildVideosHtml(perf)}</div>`;
+            }).join('');
+            return `<div><div class="group-header">🎵 ${song} ${dots} <small style="margin-left:auto; font-size:0.8em; color:#aaa;">(${grouped[song].length} veces)</small></div>${html}</div>`;
+        }).join('');
+    }
+
+    function renderYearView() {
+        const container = document.getElementById('yearViewList');
+        const grouped = recordings.reduce((acc, curr) => {
+            const year = curr.songYear || "Sin Año";
+            if (!acc[year]) acc[year] = new Set();
+            acc[year].add(curr.mainArtist);
+            (curr.guestsArray || []).forEach(g => acc[year].add(g.name));
+            return acc;
+        }, {});
+        const sortedYears = Object.keys(grouped).sort((a,b) => b - a);
+        container.innerHTML = sortedYears.map(year => {
+            const artistsHtml = [...grouped[year]].sort().map(artist => {
+                const imgSrc = artistImages[artist] || 'https://via.placeholder.com/50/333333/FFFFFF?text=🎤';
+                return `<div class="item-card" style="display: flex; align-items: center;"><img src="${imgSrc}" class="artist-img" style="width: 30px; height: 30px; margin-right: 15px;"> <strong>${artist}</strong></div>`;
+            }).join('');
+            return `<div><div class="group-header">🗓️ ${year} <small style="margin-left:auto; font-size:0.8em; color:#aaa;">(${grouped[year].size} Artistas)</small></div>${artistsHtml}</div>`;
+        }).join('');
+    }
+
+    function renderVenueView() {
+        const container = document.getElementById('venueViewList');
+        const venueMap = {};
+        recordings.forEach(rec => {
+            const venue = rec.venue || "Lugar Desconocido";
+            if (!venueMap[venue]) venueMap[venue] = new Set();
+            venueMap[venue].add(rec.mainArtist);
+            (rec.guestsArray || []).forEach(g => venueMap[venue].add(g.name));
+        });
+        const sortedVenues = Object.keys(venueMap).sort();
+        container.innerHTML = sortedVenues.map(venue => {
+            const artistsHtml = [...venueMap[venue]].sort().map(artist => {
+                const imgSrc = artistImages[artist] || 'https://via.placeholder.com/50/333333/FFFFFF?text=🎤';
+                return `<div class="item-card" style="display: flex; align-items: center;"><img src="${imgSrc}" class="artist-img" style="width: 30px; height: 30px; margin-right: 15px;"> <strong>${artist}</strong></div>`;
+            }).join('');
+            return `<div><div class="group-header">📍 ${venue} <small style="margin-left:auto; font-size:0.8em; color:#aaa;">(${venueMap[venue].size} Artistas)</small></div>${artistsHtml}</div>`;
+        }).join('');
+    }
+
+    // ==========================================
+    // ESTADÍSTICAS Y BUSCADORES DE LUPA
+    // ==========================================
+    function renderStatsView() {
+        const container = document.getElementById('statsContainer');
+        if (recordings.length === 0) { container.innerHTML = '<p style="text-align:center;">No hay datos.</p>'; return; }
+
+        let allArtistsSet = new Set(); let songsPerArtist = {}; let artistsPerVenue = {}; let artistsPerYear = {};
+        recordings.forEach(rec => {
+            const venue = rec.venue || "Desconocido";
+            const year = rec.songYear || "Sin Año";
+            const artistsInRecord = [rec.mainArtist, ...(rec.guestsArray || []).map(g => g.name)];
+            
+            artistsInRecord.forEach(artist => {
+                allArtistsSet.add(artist);
+                songsPerArtist[artist] = (songsPerArtist[artist] || 0) + 1;
+                
+                if (!artistsPerVenue[venue]) artistsPerVenue[venue] = new Set();
+                artistsPerVenue[venue].add(artist);
+
+                if (!artistsPerYear[year]) artistsPerYear[year] = new Set();
+                artistsPerYear[year].add(artist);
+            });
+        });
+
+        window.statsData = { songsPerArtist, artistsPerVenue, artistsPerYear };
+        
+        container.innerHTML = `
+            <div class="stats-grid">
+                <div class="stat-box"><h3>Grabaciones</h3><p class="number">${recordings.length}</p></div>
+                <div class="stat-box"><h3>Canciones</h3><p class="number">${new Set(recordings.map(r => r.songName)).size}</p></div>
+                <div class="stat-box"><h3>Cantantes Vistos</h3><p class="number">${allArtistsSet.size}</p></div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-list">
+                    <h3>🎤 Por Cantante 
+                        <label class="lupa-container"><span class="lupa-icon">🔍</span><input type="text" class="lupa-input" placeholder="Buscar..." onkeyup="filterStatsList('listaCantantes', this.value)"></label>
+                    </h3>
+                    <div id="listaCantantes">${generateStatsListHTML('cantantes', '')}</div>
+                </div>
+                <div class="stat-list">
+                    <h3>📍 Por Lugar 
+                        <label class="lupa-container"><span class="lupa-icon">🔍</span><input type="text" class="lupa-input" placeholder="Buscar..." onkeyup="filterStatsList('listaLugares', this.value)"></label>
+                    </h3>
+                    <div id="listaLugares">${generateStatsListHTML('lugares', '')}</div>
+                </div>
+                <div class="stat-list">
+                    <h3>🗓️ Por Año 
+                        <label class="lupa-container"><span class="lupa-icon">🔍</span><input type="text" class="lupa-input" placeholder="Buscar..." onkeyup="filterStatsList('listaAnios', this.value)"></label>
+                    </h3>
+                    <div id="listaAnios">${generateStatsListHTML('anios', '')}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    window.filterStatsList = function(targetId, query) {
+        let type = targetId === 'listaCantantes' ? 'cantantes' : (targetId === 'listaLugares' ? 'lugares' : 'anios');
+        document.getElementById(targetId).innerHTML = generateStatsListHTML(type, query.toLowerCase());
+    };
+
+    function generateStatsListHTML(type, query) {
+        if(type === 'cantantes') {
+            return Object.entries(window.statsData.songsPerArtist)
+                .filter(([art, count]) => art.toLowerCase().includes(query))
+                .sort((a, b) => b[1] - a[1])
+                .map(([art, count]) => `<div class="stat-row" style="cursor:pointer;" onclick="openDetailView('artist', '${art.replace(/'/g, "\\'")}')"><span>${art}</span> <strong>${count} grabs</strong></div>`).join('') || '<div style="color:#666; font-size:0.9em; padding:10px;">Sin resultados</div>';
+        } else if (type === 'lugares') {
+            return Object.entries(window.statsData.artistsPerVenue)
+                .filter(([ven, set]) => ven.toLowerCase().includes(query))
+                .sort((a, b) => b[1].size - a[1].size)
+                .map(([ven, set]) => `<div class="stat-row" style="cursor:pointer;" onclick="openDetailView('venue', '${ven.replace(/'/g, "\\'")}')"><span>${ven}</span> <strong>${set.size} artistas</strong></div>`).join('') || '<div style="color:#666; font-size:0.9em; padding:10px;">Sin resultados</div>';
+        } else {
+            return Object.entries(window.statsData.artistsPerYear)
+                .filter(([yr, set]) => yr.toString().includes(query))
+                .sort((a, b) => b[0] - a[0])
+                .map(([yr, set]) => `<div class="stat-row"><span>Año ${yr}</span> <strong>${set.size} artistas</strong></div>`).join('') || '<div style="color:#666; font-size:0.9em; padding:10px;">Sin resultados</div>';
+        }
+    }
+
+    function exportData() {
+        const allData = { recordings, artistImages, songProgress };
+        const dlAnchorElem = document.createElement('a');
+        dlAnchorElem.setAttribute("href", "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allData)));
+        dlAnchorElem.setAttribute("download", "backup_recitales.json"); dlAnchorElem.click();
+    }
+    
+    function importData() {
+        const fileInput = document.getElementById('importFile');
+        if (!fileInput.files.length) return alert('Selecciona archivo.');
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedData = JSON.parse(e.target.result);
+                if (importedData.recordings) {
+                    recordings = [...recordings, ...importedData.recordings];
+                    artistImages = { ...artistImages, ...(importedData.artistImages || {}) };
+                    songProgress = { ...songProgress, ...(importedData.songProgress || {}) };
+                    localStorage.setItem('recitalData', JSON.stringify(recordings));
+                    localStorage.setItem('artistImagesData', JSON.stringify(artistImages));
+                    localStorage.setItem('songProgressData', JSON.stringify(songProgress));
+                    alert('Importado OK!'); renderUI();
+                } else alert('Formato erróneo.');
+            } catch (err) { alert('Error de lectura.'); }
+        };
+        reader.readAsText(fileInput.files[0]);
+    }
+    
+    function clearAllData() {
+        if (confirm('¿Seguro que querés borrar todo?')) {
+            localStorage.clear(); recordings = []; artistImages = {}; songProgress = {}; renderUI(); alert('Borrado.');
+        }
+    }
+
+    resetForm(); renderUI();
+</script>
+
+</body>
+</html>
