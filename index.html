@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>sistema de gestion</title>
+    <title>Music Saw</title>
     
-    <link rel="icon" href="TU_LOGO_AQUI.png">
-    <link rel="apple-touch-icon" href="TU_LOGO_AQUI.png">
+    <link rel="icon" href="logo.jpg">
+    <link rel="apple-touch-icon" href="logo.jpg">
 
     <style>
         :root {
@@ -36,7 +36,13 @@
             padding: 20px;
             transition: background-color 0.3s, color 0.3s;
         }
-        h1, h2 { text-align: center; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; }
+        
+        .header-wrapper { position: relative; display: flex; justify-content: center; align-items: center; margin-bottom: 20px; }
+        .header-wrapper h1 { margin: 0; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+        .theme-toggle { position: absolute; right: 0; font-size: 1.5rem; cursor: pointer; user-select: none; transition: 0.3s; }
+        .theme-toggle:hover { transform: scale(1.1); }
+
+        h2 { text-align: center; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; margin-top: 0; }
         
         .container { max-width: 900px; margin: 0 auto; }
 
@@ -104,9 +110,9 @@
             color: #000;
             border: none;
             border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            font-size: 30px;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             cursor: pointer;
             z-index: 1000;
@@ -127,7 +133,6 @@
         .item-card:last-child { border-bottom: none; }
         .guest-badge { background-color: #c62828; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-right: 5px; }
         
-        /* Métrica minimalista para los videos */
         .metric-text { color: #888; font-size: 0.85em; font-style: italic; margin-left: 8px; }
 
         .dots { letter-spacing: 2px; font-size: 0.9em; margin-left: 10px; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 20px; }
@@ -147,7 +152,7 @@
         .detail-sub-item { padding: 15px 0; border-bottom: 1px dashed #444; line-height: 1.6; }
         .detail-sub-item:last-child { border-bottom: none; padding-bottom: 0; }
 
-        /* Estadísticas y Lupa (Buscador invisible) */
+        /* Estadísticas y Lupa */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .stat-box { background-color: #2a2a2a; padding: 20px; border-radius: 12px; text-align: center; border-bottom: 4px solid var(--accent); }
         .stat-box h3 { margin: 0 0 10px 0; font-size: 1rem; color: var(--text-muted); text-transform: uppercase; }
@@ -169,10 +174,15 @@
 
         /* Ajustes específicos para Celular */
         @media (max-width: 600px) {
-            .top-nav { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 5px; position: sticky; top: 0; z-index: 100; border-radius: 0 0 12px 12px; padding: 10px; }
-            .nav-btn { flex: 1 1 30%; font-size: 0.8rem; padding: 10px 2px; text-align: center; border: 1px solid #333; }
+            .top-nav { 
+                display: grid; 
+                grid-template-columns: repeat(3, 1fr); 
+                gap: 5px; 
+                position: sticky; top: 0; z-index: 100; 
+                border-radius: 0 0 12px 12px; padding: 10px; 
+            }
+            .nav-btn { font-size: 0.8rem; padding: 10px 2px; text-align: center; border: 1px solid #333; margin: 0; width: 100%; }
             .nav-btn.active { background-color: var(--accent); color: #000; border: none; }
-            .nav-btn[onclick="showPanel('panel-estadisticas')"], .nav-btn[onclick="showPanel('panel-datos')"], .nav-btn[onclick="toggleNightMode()"] { flex: 1 1 100%; margin-top: 5px; }
             .edit-btn { opacity: 0.3; }
             .filter-row { flex-direction: column; gap: 10px; }
             
@@ -186,7 +196,10 @@
 <body>
 
 <div class="container">
-    <h1>sistema de gestion</h1>
+    <div class="header-wrapper">
+        <h1>MUSIC SAW</h1>
+        <span class="theme-toggle" id="themeIcon" onclick="toggleNightMode()" title="Cambiar a Modo Claro">🌙</span>
+    </div>
 
     <div class="global-search-wrapper">
         <input type="text" id="globalSearchInput" class="global-search-input" placeholder="🔍 Buscar canción, cantante o lugar..." autocomplete="off" oninput="handleGlobalSearch()">
@@ -200,8 +213,7 @@
         <button class="nav-btn" onclick="showPanel('panel-anios')">Años</button>
         <button class="nav-btn" onclick="showPanel('panel-lugares')">Lugares</button>
         <button class="nav-btn" onclick="showPanel('panel-estadisticas')">Estadísticas</button>
-        <button class="nav-btn" onclick="showPanel('panel-datos')">Datos / Opciones</button>
-        <button class="nav-btn" onclick="toggleNightMode()">🌓 Modo Noche</button>
+        <button class="nav-btn" onclick="showPanel('panel-datos')">Datos</button>
     </div>
 
     <button id="mobileAddBtn" class="fab-btn" onclick="showPanel('panel-cargar')">➕</button>
@@ -311,7 +323,7 @@
     </div>
 
     <div id="panel-datos" class="panel card">
-        <h2>Gestión de Datos</h2>
+        <h2>Datos</h2>
         <div class="form-group" style="margin-top: 20px;">
             <label>Exportar Copia de Seguridad</label>
             <button class="submit-btn" onclick="exportData()" style="background-color: #4CAF50;">⬇️ Descargar Backup</button>
@@ -358,12 +370,11 @@
 
         if (panelId !== 'panel-detalle') {
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            // Activar botón del menú (excepto si venimos desde el FAB)
             const targetBtn = document.querySelector(`.nav-btn[onclick="showPanel('${panelId}')"]`);
             if (targetBtn) targetBtn.classList.add('active');
             
-            document.getElementById('mainNav').style.display = 'flex';
-            lastActivePanel = panelId; // Guardamos el último panel normal visitado
+            document.getElementById('mainNav').style.display = window.innerWidth <= 600 ? 'grid' : 'flex';
+            lastActivePanel = panelId; 
         } else {
             document.getElementById('mainNav').style.display = 'none';
             document.getElementById('globalSearchInput').value = '';
@@ -378,7 +389,23 @@
         showPanel(lastActivePanel);
     }
 
-    function toggleNightMode() { document.body.classList.toggle('light-mode'); }
+    function toggleNightMode() { 
+        document.body.classList.toggle('light-mode'); 
+        const themeIcon = document.getElementById('themeIcon');
+        if (document.body.classList.contains('light-mode')) {
+            themeIcon.innerText = '☀️';
+            themeIcon.title = "Cambiar a Modo Noche";
+        } else {
+            themeIcon.innerText = '🌙';
+            themeIcon.title = "Cambiar a Modo Claro";
+        }
+    }
+
+    window.addEventListener('resize', () => {
+        if (document.getElementById('mainNav').style.display !== 'none') {
+            document.getElementById('mainNav').style.display = window.innerWidth <= 600 ? 'grid' : 'flex';
+        }
+    });
 
     window.syncArtistImage = function(inputElem) {
         const name = inputElem.value.trim();
@@ -451,7 +478,6 @@
         let currP = document.getElementById('progCurrent').value; 
         let totP = document.getElementById('progTotal').value;
         
-        // --- NUEVA LÓGICA DE PROGRESO POR DEFECTO ---
         if (currP === '' && totP === '') {
             currP = '1';
             totP = '1';
@@ -489,7 +515,6 @@
         localStorage.setItem('recitalData', JSON.stringify(recordings));
         localStorage.setItem('artistImagesData', JSON.stringify(artistImages));
         
-        // Volver al panel anterior después de guardar
         resetForm(); 
         showPanel(lastActivePanel);
     });
@@ -904,12 +929,11 @@
         }
     }
 
-    // Inicialización inteligente para celular
     resetForm(); 
     if (window.innerWidth <= 600) {
-        showPanel('panel-artistas'); // Por defecto abre en Artistas si es celular
+        showPanel('panel-artistas'); 
     } else {
-        showPanel('panel-cargar');   // Por defecto abre en Cargar si es PC
+        showPanel('panel-cargar');   
     }
 </script>
 
