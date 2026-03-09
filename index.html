@@ -80,7 +80,7 @@
         /* Formulario */
         .form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
         .form-row { display: flex; gap: 10px; align-items: center; }
-        .form-row input { flex: 1; }
+        .form-row input, .form-row select { flex: 1; }
         label { margin-bottom: 5px; font-weight: bold; font-size: 0.9em; color: var(--accent); }
         input[type="text"], input[type="number"], input[type="url"], select {
             padding: 10px; border-radius: 6px; border: 1px solid #555;
@@ -94,9 +94,31 @@
         .btn-small { background-color: #333; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.9em; margin-top: 5px; }
         .btn-danger { background-color: var(--danger); color: white; width: 100%; padding: 15px; font-size: 1.1em; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 20px; }
 
+        /* Botón Flotante para Celular */
+        .fab-btn {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            cursor: pointer;
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+        .fab-btn:active { transform: scale(0.9); }
+
         /* Vistas, Listas */
         .group-header {
-            display: flex; align-items: center; gap: 15px; flex-wrap: wrap;
+            display: flex; align-items: center; justify-content: space-between; gap: 15px; flex-wrap: wrap;
             background-color: #2a2a2a; padding: 10px 15px; border-radius: 8px;
             font-size: 1.2rem; font-weight: bold; color: var(--accent); margin-top: 20px;
         }
@@ -104,8 +126,12 @@
         .item-card { padding: 15px; border-bottom: 1px solid #444; margin-left: 20px; line-height: 1.5; position: relative; }
         .item-card:last-child { border-bottom: none; }
         .guest-badge { background-color: #c62828; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-right: 5px; }
+        
+        /* Métrica minimalista para los videos */
+        .metric-text { color: #888; font-size: 0.85em; font-style: italic; margin-left: 8px; }
+
         .dots { letter-spacing: 2px; font-size: 0.9em; margin-left: 10px; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 20px; }
-        .video-btn { color: var(--accent); text-decoration: underline; font-size: 0.9em; margin-left: 10px; background: transparent; display: inline-block; }
+        .video-btn { color: var(--accent); text-decoration: underline; font-size: 0.9em; margin-right: 5px; background: transparent; display: inline-block; }
         
         .edit-btn { position: absolute; top: 15px; right: 10px; background: none; border: none; cursor: pointer; font-size: 1.2rem; opacity: 0.1; transition: 0.3s; }
         .edit-btn:hover { opacity: 1; }
@@ -115,7 +141,7 @@
         .detail-accordion { background-color: #252525; border-radius: 8px; margin: 10px 0; overflow: hidden; }
         .detail-accordion summary { padding: 15px; font-weight: bold; cursor: pointer; background-color: #2a2a2a; color: var(--text-main); list-style: none; display: flex; justify-content: space-between; align-items: center; }
         .detail-accordion summary::-webkit-details-marker { display: none; }
-        .detail-accordion summary::after { content: '▼'; font-size: 0.8em; color: var(--accent); }
+        .detail-accordion summary::after { content: '▼'; font-size: 0.8em; color: var(--accent); margin-left: 10px; }
         .detail-accordion[open] summary::after { content: '▲'; }
         .details-content { padding: 15px; border-top: 1px solid #444; background-color: var(--bg-color); font-size: 0.95em; }
         .detail-sub-item { padding: 15px 0; border-bottom: 1px dashed #444; line-height: 1.6; }
@@ -138,14 +164,22 @@
         .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #444; }
         .stat-row:last-child { border-bottom: none; }
 
-        /* Celular */
+        .filter-row { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px; }
+        .filter-row > div { display: flex; flex-direction: column; }
+
+        /* Ajustes específicos para Celular */
         @media (max-width: 600px) {
             .top-nav { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 5px; position: sticky; top: 0; z-index: 100; border-radius: 0 0 12px 12px; padding: 10px; }
             .nav-btn { flex: 1 1 30%; font-size: 0.8rem; padding: 10px 2px; text-align: center; border: 1px solid #333; }
             .nav-btn.active { background-color: var(--accent); color: #000; border: none; }
             .nav-btn[onclick="showPanel('panel-estadisticas')"], .nav-btn[onclick="showPanel('panel-datos')"], .nav-btn[onclick="toggleNightMode()"] { flex: 1 1 100%; margin-top: 5px; }
             .edit-btn { opacity: 0.3; }
-            .detail-accordion summary { flex-direction: column; align-items: flex-start; gap: 5px; }
+            .filter-row { flex-direction: column; gap: 10px; }
+            
+            /* Ocultar el botón "Cargar" del menú en celular */
+            #nav-btn-cargar { display: none; }
+            /* Mostrar botón flotante si no estamos en el panel de carga */
+            body:not(.cargar-active) .fab-btn { display: flex; }
         }
     </style>
 </head>
@@ -160,7 +194,7 @@
     </div>
 
     <div class="top-nav" id="mainNav">
-        <button class="nav-btn active" onclick="showPanel('panel-cargar')">Cargar</button>
+        <button class="nav-btn" id="nav-btn-cargar" onclick="showPanel('panel-cargar')">Cargar</button>
         <button class="nav-btn" onclick="showPanel('panel-artistas')">Artistas</button>
         <button class="nav-btn" onclick="showPanel('panel-canciones')">Canciones</button>
         <button class="nav-btn" onclick="showPanel('panel-anios')">Años</button>
@@ -170,12 +204,14 @@
         <button class="nav-btn" onclick="toggleNightMode()">🌓 Modo Noche</button>
     </div>
 
+    <button id="mobileAddBtn" class="fab-btn" onclick="showPanel('panel-cargar')">➕</button>
+
     <datalist id="list-songs"></datalist>
     <datalist id="list-artists"></datalist>
     <datalist id="list-venues"></datalist>
     <datalist id="list-years"></datalist>
 
-    <div id="panel-cargar" class="panel active card">
+    <div id="panel-cargar" class="panel card">
         <form id="recordForm">
             <input type="hidden" id="editId">
             <div class="form-group">
@@ -193,7 +229,22 @@
             <div class="form-group">
                 <label>Video</label>
                 <div id="videosContainer"></div>
-                <button type="button" class="btn-small" onclick="addVideoField()">+ Añadir enlace de video</button>
+                <button type="button" class="btn-small" onclick="addVideoField()" style="margin-bottom: 10px;">+ Añadir enlace de video</button>
+                
+                <div class="form-row">
+                    <select id="videoDistance">
+                        <option value="">Distancia (1 a 3)</option>
+                        <option value="1">1 - Cerca</option>
+                        <option value="2">2 - Medio</option>
+                        <option value="3">3 - Lejos</option>
+                    </select>
+                    <select id="videoQuality">
+                        <option value="">Calidad (1 a 3)</option>
+                        <option value="1">1 - Baja</option>
+                        <option value="2">2 - Buena</option>
+                        <option value="3">3 - Excelente</option>
+                    </select>
+                </div>
             </div>
             <div class="form-group">
                 <label>Año</label>
@@ -217,16 +268,36 @@
         </form>
     </div>
 
-    <div id="panel-artistas" class="panel card"><div id="artistViewList"></div></div>
+    <div id="panel-artistas" class="panel card">
+        <div class="filter-row">
+            <div>
+                <label>Ordenar por:</label>
+                <select id="artistSortOrder" onchange="renderArtistView()" style="background-color: var(--bg-color); color: var(--text-main); border: 1px solid #555; padding: 8px; border-radius: 6px;">
+                    <option value="alpha">Abecedario (A-Z)</option>
+                    <option value="count">Mayor cantidad de canciones</option>
+                </select>
+            </div>
+        </div>
+        <div id="artistViewList"></div>
+    </div>
     
     <div id="panel-canciones" class="panel card">
-        <div style="margin-bottom: 15px;">
-            <label>Filtrar por progreso:</label>
-            <select id="songProgressFilter" onchange="renderSongView()" style="background-color: var(--bg-color); color: var(--text-main); border: 1px solid #555; padding: 8px; border-radius: 6px;">
-                <option value="all">Todas las canciones</option>
-                <option value="complete">Solo Completas (Todos los puntos)</option>
-                <option value="two_or_more">Con 2 o más puntos</option>
-            </select>
+        <div class="filter-row">
+            <div>
+                <label>Filtrar por progreso:</label>
+                <select id="songProgressFilter" onchange="renderSongView()" style="background-color: var(--bg-color); color: var(--text-main); border: 1px solid #555; padding: 8px; border-radius: 6px;">
+                    <option value="all">Todas las canciones</option>
+                    <option value="complete">Solo Completas (Todos los puntos)</option>
+                    <option value="two_or_more">Con 2 o más puntos</option>
+                </select>
+            </div>
+            <div>
+                <label>Ordenar por:</label>
+                <select id="songSortOrder" onchange="renderSongView()" style="background-color: var(--bg-color); color: var(--text-main); border: 1px solid #555; padding: 8px; border-radius: 6px;">
+                    <option value="count">Más veces grabada</option>
+                    <option value="alpha">Abecedario (A-Z)</option>
+                </select>
+            </div>
         </div>
         <div id="songViewList"></div>
     </div>
@@ -259,7 +330,7 @@
     </div>
 
     <div id="panel-detalle" class="panel card">
-        <button class="nav-btn" onclick="showPanel('panel-cargar')" style="background:var(--accent); color:#000; margin-bottom:20px; width:100%; text-align:center;">⬅ Volver al menú principal</button>
+        <button class="nav-btn" onclick="closeDetailView()" style="background:var(--accent); color:#000; margin-bottom:20px; width:100%; text-align:center;">⬅ Volver</button>
         <div id="detalleContent"></div>
     </div>
 
@@ -274,21 +345,37 @@
     const guestsContainer = document.getElementById('guestsContainer');
     const videosContainer = document.getElementById('videosContainer');
     let guestCount = 0;
+    let lastActivePanel = 'panel-artistas'; // Para saber a dónde volver desde detalle
 
     function showPanel(panelId) {
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        
+        if (panelId === 'panel-cargar') {
+            document.body.classList.add('cargar-active');
+        } else {
+            document.body.classList.remove('cargar-active');
+        }
+
         if (panelId !== 'panel-detalle') {
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            const clickedBtn = event ? event.target : null;
-            if (clickedBtn && clickedBtn.classList.contains('nav-btn')) clickedBtn.classList.add('active');
+            // Activar botón del menú (excepto si venimos desde el FAB)
+            const targetBtn = document.querySelector(`.nav-btn[onclick="showPanel('${panelId}')"]`);
+            if (targetBtn) targetBtn.classList.add('active');
+            
             document.getElementById('mainNav').style.display = 'flex';
+            lastActivePanel = panelId; // Guardamos el último panel normal visitado
         } else {
             document.getElementById('mainNav').style.display = 'none';
             document.getElementById('globalSearchInput').value = '';
             document.getElementById('globalSearchResults').style.display = 'none';
         }
+        
         document.getElementById(panelId).classList.add('active');
         renderUI();
+    }
+
+    function closeDetailView() {
+        showPanel(lastActivePanel);
     }
 
     function toggleNightMode() { document.body.classList.toggle('light-mode'); }
@@ -328,6 +415,14 @@
         return videos.map((vUrl, index) => `<a href="${vUrl}" target="_blank" class="video-btn">▶ Ver video ${videos.length > 1 ? (index + 1) : ''}</a>`).join(' ');
     }
 
+    function getVidMetricsHtml(rec) {
+        let metrics = [];
+        if (rec.videoDistance) metrics.push(`D: ${rec.videoDistance}/3`);
+        if (rec.videoQuality) metrics.push(`C: ${rec.videoQuality}/3`);
+        if (metrics.length === 0) return '';
+        return `<span class="metric-text">(${metrics.join(' - ')})</span>`;
+    }
+
     function checkSongProgress() {
         const song = document.getElementById('songName').value.trim();
         if(songProgress[song]) {
@@ -352,8 +447,18 @@
         const mainArtistImg = document.getElementById('artistImg').value.trim();
         const songNameInput = document.getElementById('songName').value.trim();
         if(mainArtistImg) artistImages[mainArtist] = mainArtistImg;
-        const currP = document.getElementById('progCurrent').value; const totP = document.getElementById('progTotal').value;
-        if(currP || totP) { songProgress[songNameInput] = { current: currP, total: totP }; localStorage.setItem('songProgressData', JSON.stringify(songProgress)); }
+        
+        let currP = document.getElementById('progCurrent').value; 
+        let totP = document.getElementById('progTotal').value;
+        
+        // --- NUEVA LÓGICA DE PROGRESO POR DEFECTO ---
+        if (currP === '' && totP === '') {
+            currP = '1';
+            totP = '1';
+        }
+        
+        songProgress[songNameInput] = { current: currP, total: totP }; 
+        localStorage.setItem('songProgressData', JSON.stringify(songProgress));
 
         let currentGuests = [];
         document.querySelectorAll('.guest-box').forEach(box => {
@@ -366,8 +471,15 @@
 
         const idToSave = document.getElementById('editId').value || Date.now().toString();
         const recordData = {
-            id: idToSave, songName: songNameInput, songYear: document.getElementById('songYear').value, mainArtist: mainArtist,
-            guestsArray: currentGuests, venue: document.getElementById('concertVenue').value.trim(), videosArray: currentVideos
+            id: idToSave, 
+            songName: songNameInput, 
+            songYear: document.getElementById('songYear').value, 
+            mainArtist: mainArtist,
+            guestsArray: currentGuests, 
+            venue: document.getElementById('concertVenue').value.trim(), 
+            videosArray: currentVideos,
+            videoDistance: document.getElementById('videoDistance').value,
+            videoQuality: document.getElementById('videoQuality').value
         };
 
         const existingIndex = recordings.findIndex(r => r.id.toString() === recordData.id.toString());
@@ -376,7 +488,10 @@
 
         localStorage.setItem('recitalData', JSON.stringify(recordings));
         localStorage.setItem('artistImagesData', JSON.stringify(artistImages));
-        resetForm(); renderUI();
+        
+        // Volver al panel anterior después de guardar
+        resetForm(); 
+        showPanel(lastActivePanel);
     });
 
     function resetForm() {
@@ -387,10 +502,16 @@
     window.editRecord = function(id) {
         const rec = recordings.find(r => r.id.toString() === id.toString());
         if(!rec) return;
-        document.getElementById('editId').value = rec.id; document.getElementById('songName').value = rec.songName; checkSongProgress();
-        document.getElementById('songYear').value = rec.songYear || ''; document.getElementById('mainArtist').value = rec.mainArtist;
-        document.getElementById('artistImg').value = artistImages[rec.mainArtist] || ''; document.getElementById('concertVenue').value = rec.venue;
+        document.getElementById('editId').value = rec.id; 
+        document.getElementById('songName').value = rec.songName; checkSongProgress();
+        document.getElementById('songYear').value = rec.songYear || ''; 
+        document.getElementById('mainArtist').value = rec.mainArtist;
+        document.getElementById('artistImg').value = artistImages[rec.mainArtist] || ''; 
+        document.getElementById('concertVenue').value = rec.venue;
         
+        document.getElementById('videoDistance').value = rec.videoDistance || '';
+        document.getElementById('videoQuality').value = rec.videoQuality || '';
+
         guestsContainer.innerHTML = ''; guestCount = 0;
         (rec.guestsArray || []).forEach(g => addGuestField(g.name, artistImages[g.name] || ''));
         
@@ -398,8 +519,9 @@
         if (videos.length === 0) addVideoField(); else videos.forEach(vUrl => addVideoField(vUrl));
         
         document.getElementById('saveBtn').innerText = 'Actualizar Grabación';
-        document.getElementById('mainNav').style.display = 'flex';
-        showPanel('panel-cargar'); window.scrollTo(0, 0);
+        
+        showPanel('panel-cargar'); 
+        window.scrollTo(0, 0);
     };
 
     window.handleGlobalSearch = function() {
@@ -442,17 +564,21 @@
 
         if (type === 'song') {
             const songRecs = recordings.filter(r => r.songName === value);
-            html += `<div class="group-header">🎵 ${value} ${getDotsHTML(value)}</div>`;
+            html += `<div class="group-header">
+                <div style="display: flex; align-items: center;">🎵 <strong style="margin: 0 5px;">${value}</strong> ${getDotsHTML(value)}</div>
+            </div>`;
             songRecs.forEach(perf => {
                 const guestsText = (perf.guestsArray || []).map(g => g.name).join(', ');
                 const vidsHtml = buildVideosHtml(perf);
+                const metricsHtml = getVidMetricsHtml(perf);
                 html += `<div class="item-card"><button class="edit-btn" onclick="editRecord('${perf.id}')">✏️</button>
                     Por <strong>${perf.mainArtist}</strong> ${guestsText ? `(con ${guestsText})` : ''} <br>
-                    📍 ${perf.venue} | 🗓️ ${perf.songYear || "Sin Año"}<br>${vidsHtml}</div>`;
+                    📍 ${perf.venue} | 🗓️ ${perf.songYear || "Sin Año"}<br>
+                    <div style="margin-top: 5px;">${vidsHtml} ${metricsHtml}</div></div>`;
             });
 
         } else if (type === 'artist') {
-            html += `<div class="group-header"><img src="${artistImages[value] || 'https://via.placeholder.com/50/333333/FFFFFF?text=🎤'}" class="artist-img"><span>${value} (Sus canciones)</span></div>`;
+            html += `<div class="group-header"><div style="display: flex; align-items: center;"><img src="${artistImages[value] || 'https://via.placeholder.com/50/333333/FFFFFF?text=🎤'}" class="artist-img" style="margin-right: 15px;"><span>${value} (Sus canciones)</span></div></div>`;
             const artistSongs = {};
             recordings.forEach(rec => {
                 const isMain = rec.mainArtist === value;
@@ -464,17 +590,19 @@
             });
             Object.keys(artistSongs).sort().forEach(song => {
                 html += `<details class="detail-accordion">
-                    <summary style="display: flex; align-items: center;">
-                        <span>🎵 <strong>${song}</strong> ${getDotsHTML(song)}</span>
-                        <small style="color:#aaa; margin-left:10px;">(${artistSongs[song].length} veces)</small>
+                    <summary style="display: flex; align-items: center; justify-content: space-between;">
+                        <span style="display: flex; align-items: center;">🎵 <strong style="margin: 0 5px;">${song}</strong> ${getDotsHTML(song)}</span>
+                        <small style="color:#aaa; white-space: nowrap;">(${artistSongs[song].length} veces)</small>
                     </summary>
                     <div class="details-content">`;
                 artistSongs[song].forEach(perf => {
                     const vids = buildVideosHtml(perf);
+                    const metricsHtml = getVidMetricsHtml(perf);
                     html += `<div class="detail-sub-item">
                         <button class="edit-btn-visible" onclick="editRecord('${perf.id}')" style="float:right;">✏️ Editar</button>
                         ${perf.wasGuest ? '<span class="guest-badge">INVITADO</span> de <strong>' + perf.mainArtist + '</strong>' : '🎤 Como Artista Principal'} <br>
-                        📍 ${perf.venue} | 🗓️ ${perf.songYear || 'Sin Año'}<br>${vids}
+                        📍 ${perf.venue} | 🗓️ ${perf.songYear || 'Sin Año'}<br>
+                        <div style="margin-top: 5px;">${vids} ${metricsHtml}</div>
                     </div>`;
                 });
                 html += `</div></details>`;
@@ -528,6 +656,8 @@
 
     function renderArtistView() {
         const container = document.getElementById('artistViewList');
+        const sortOrder = document.getElementById('artistSortOrder') ? document.getElementById('artistSortOrder').value : 'alpha';
+        
         const artistMap = {};
         recordings.forEach(rec => {
             const year = rec.songYear || "Sin Año";
@@ -538,32 +668,51 @@
                 artistMap[g.name].push({ ...rec, role: 'guest', host: rec.mainArtist, displayYear: year });
             });
         });
-        const sortedArtists = Object.keys(artistMap).sort();
+
+        let sortedArtists = Object.keys(artistMap);
+        if (sortOrder === 'count') {
+            sortedArtists.sort((a, b) => artistMap[b].length - artistMap[a].length);
+        } else {
+            sortedArtists.sort((a, b) => a.localeCompare(b));
+        }
+
         container.innerHTML = sortedArtists.map(artist => {
             const imgSrc = artistImages[artist] || 'https://via.placeholder.com/50/333333/FFFFFF?text=🎤';
             const songsHtml = artistMap[artist].map(song => {
                 const vidsHtml = buildVideosHtml(song);
+                const metricsHtml = getVidMetricsHtml(song);
                 if (song.role === 'main') {
                     const guestsText = (song.guestsArray || []).map(g => g.name).join(', ');
                     return `<div class="item-card"><button class="edit-btn" onclick="editRecord('${song.id}')">✏️</button>
-                        <strong>${song.songName}</strong> (${song.displayYear}) - ${song.venue} ${vidsHtml ? `<br>${vidsHtml}` : ''}
-                        ${guestsText ? `<br><small style="color:var(--accent)">Con: ${guestsText}</small>` : ''}</div>`;
+                        <strong>${song.songName}</strong> (${song.displayYear}) - ${song.venue} 
+                        ${guestsText ? `<br><small style="color:var(--accent)">Con: ${guestsText}</small>` : ''}
+                        <div style="margin-top: 5px;">${vidsHtml} ${metricsHtml}</div></div>`;
                 } else {
                     return `<div class="item-card"><button class="edit-btn" onclick="editRecord('${song.id}')">✏️</button>
-                        <span class="guest-badge">INVITADO</span><strong>${song.songName}</strong> (${song.displayYear}) ${vidsHtml ? `<br>${vidsHtml}` : ''}<br>
-                        <small style="color:#aaa">En el recital de <strong>${song.host}</strong> (${song.venue})</small></div>`;
+                        <span class="guest-badge">INVITADO</span><strong>${song.songName}</strong> (${song.displayYear})<br>
+                        <small style="color:#aaa">En el recital de <strong>${song.host}</strong> (${song.venue})</small>
+                        <div style="margin-top: 5px;">${vidsHtml} ${metricsHtml}</div></div>`;
                 }
             }).join('');
-            return `<div><div class="group-header"><img src="${imgSrc}" class="artist-img"><span>${artist}</span></div>${songsHtml}</div>`;
+            return `<div>
+                <div class="group-header">
+                    <div style="display: flex; align-items: center;"><img src="${imgSrc}" class="artist-img" style="margin-right: 15px;"><span>${artist}</span></div>
+                    <small style="color:#aaa;">(${artistMap[artist].length} canciones)</small>
+                </div>
+                ${songsHtml}
+            </div>`;
         }).join('');
     }
 
     function renderSongView() {
         const container = document.getElementById('songViewList');
         const filterVal = document.getElementById('songProgressFilter').value;
+        const sortOrder = document.getElementById('songSortOrder') ? document.getElementById('songSortOrder').value : 'count';
+        
         const grouped = recordings.reduce((acc, curr) => { if (!acc[curr.songName]) acc[curr.songName] = []; acc[curr.songName].push(curr); return acc; }, {});
         
         let filteredSongs = Object.keys(grouped);
+        
         if (filterVal !== 'all') {
             filteredSongs = filteredSongs.filter(song => {
                 const prog = songProgress[song] || { current: 0, total: 1 };
@@ -578,16 +727,31 @@
                 return true;
             });
         }
-        filteredSongs.sort((a, b) => grouped[b].length - grouped[a].length);
+        
+        if (sortOrder === 'alpha') {
+            filteredSongs.sort((a, b) => a.localeCompare(b));
+        } else {
+            filteredSongs.sort((a, b) => grouped[b].length - grouped[a].length);
+        }
         
         container.innerHTML = filteredSongs.map(song => {
             const dots = getDotsHTML(song);
             const html = grouped[song].map(perf => {
                 const guestsText = (perf.guestsArray || []).map(g => g.name).join(', ');
+                const vidsHtml = buildVideosHtml(perf);
+                const metricsHtml = getVidMetricsHtml(perf);
                 return `<div class="item-card"><button class="edit-btn" onclick="editRecord('${perf.id}')">✏️</button>
-                    Por <strong>${perf.mainArtist}</strong> ${guestsText ? `(con ${guestsText})` : ''} en ${perf.venue} (${perf.songYear || "Sin Año"})<br>${buildVideosHtml(perf)}</div>`;
+                    Por <strong>${perf.mainArtist}</strong> ${guestsText ? `(con ${guestsText})` : ''} en ${perf.venue} (${perf.songYear || "Sin Año"})
+                    <div style="margin-top: 5px;">${vidsHtml} ${metricsHtml}</div></div>`;
             }).join('');
-            return `<div><div class="group-header">🎵 ${song} ${dots} <small style="margin-left:auto; font-size:0.8em; color:#aaa;">(${grouped[song].length} veces)</small></div>${html}</div>`;
+            
+            return `<div>
+                <div class="group-header" style="cursor:pointer; display: flex; justify-content: space-between; align-items: center;" onclick="openDetailView('song', '${song.replace(/'/g, "\\'")}')">
+                    <div style="display: flex; align-items: center;">🎵 <span style="margin: 0 5px;">${song}</span> ${dots}</div> 
+                    <small style="color:#aaa; white-space: nowrap;">(${grouped[song].length} veces)</small>
+                </div>
+                ${html}
+            </div>`;
         }).join('');
     }
 
@@ -604,7 +768,7 @@
         container.innerHTML = sortedYears.map(year => {
             const artistsHtml = [...grouped[year]].sort().map(artist => {
                 const imgSrc = artistImages[artist] || 'https://via.placeholder.com/50/333333/FFFFFF?text=🎤';
-                return `<div class="item-card" style="display: flex; align-items: center;"><img src="${imgSrc}" class="artist-img" style="width: 30px; height: 30px; margin-right: 15px;"> <strong>${artist}</strong></div>`;
+                return `<div class="item-card" style="display: flex; align-items: center; cursor: pointer;" onclick="openDetailView('artist', '${artist.replace(/'/g, "\\'")}')"><img src="${imgSrc}" class="artist-img" style="width: 30px; height: 30px; margin-right: 15px;"> <strong>${artist}</strong></div>`;
             }).join('');
             return `<div><div class="group-header">🗓️ ${year} <small style="margin-left:auto; font-size:0.8em; color:#aaa;">(${grouped[year].size} Artistas)</small></div>${artistsHtml}</div>`;
         }).join('');
@@ -623,15 +787,12 @@
         container.innerHTML = sortedVenues.map(venue => {
             const artistsHtml = [...venueMap[venue]].sort().map(artist => {
                 const imgSrc = artistImages[artist] || 'https://via.placeholder.com/50/333333/FFFFFF?text=🎤';
-                return `<div class="item-card" style="display: flex; align-items: center;"><img src="${imgSrc}" class="artist-img" style="width: 30px; height: 30px; margin-right: 15px;"> <strong>${artist}</strong></div>`;
+                return `<div class="item-card" style="display: flex; align-items: center; cursor: pointer;" onclick="openDetailView('artist', '${artist.replace(/'/g, "\\'")}')"><img src="${imgSrc}" class="artist-img" style="width: 30px; height: 30px; margin-right: 15px;"> <strong>${artist}</strong></div>`;
             }).join('');
-            return `<div><div class="group-header">📍 ${venue} <small style="margin-left:auto; font-size:0.8em; color:#aaa;">(${venueMap[venue].size} Artistas)</small></div>${artistsHtml}</div>`;
+            return `<div><div class="group-header" style="cursor: pointer;" onclick="openDetailView('venue', '${venue.replace(/'/g, "\\'")}')">📍 ${venue} <small style="margin-left:auto; font-size:0.8em; color:#aaa;">(${venueMap[venue].size} Artistas)</small></div>${artistsHtml}</div>`;
         }).join('');
     }
 
-    // ==========================================
-    // ESTADÍSTICAS Y BUSCADORES DE LUPA
-    // ==========================================
     function renderStatsView() {
         const container = document.getElementById('statsContainer');
         if (recordings.length === 0) { container.innerHTML = '<p style="text-align:center;">No hay datos.</p>'; return; }
@@ -743,7 +904,13 @@
         }
     }
 
-    resetForm(); renderUI();
+    // Inicialización inteligente para celular
+    resetForm(); 
+    if (window.innerWidth <= 600) {
+        showPanel('panel-artistas'); // Por defecto abre en Artistas si es celular
+    } else {
+        showPanel('panel-cargar');   // Por defecto abre en Cargar si es PC
+    }
 </script>
 
 </body>
