@@ -129,6 +129,12 @@
             background-color: #2a2a2a; padding: 10px 15px; border-radius: 8px;
             font-size: 1.2rem; font-weight: bold; color: var(--accent); margin-top: 20px;
         }
+        
+        details > summary.group-header { cursor: pointer; list-style: none; margin-top: 10px; }
+        details > summary.group-header::-webkit-details-marker { display: none; }
+        details[open] > summary.group-header .toggle-icon::after { content: " ▲"; }
+        details:not([open]) > summary.group-header .toggle-icon::after { content: " ▼"; }
+        
         .artist-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); background-color: #444; }
         .item-card { padding: 15px; border-bottom: 1px solid #444; margin-left: 20px; line-height: 1.5; position: relative; }
         .item-card:last-child { border-bottom: none; }
@@ -173,23 +179,34 @@
         .filter-row { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px; }
         .filter-row > div { display: flex; flex-direction: column; }
 
-        /* Ajustes específicos para Celular */
+        .stat-list-small { background-color: #2a2a2a; padding: 12px; border-radius: 12px; margin-bottom: 15px; }
+        .stat-list-small h4 { margin: 0 0 10px 0; color: var(--accent); border-bottom: 1px solid #444; padding-bottom: 5px; font-size: 0.95rem; text-transform: uppercase; }
+        .month-stats-container { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.85em; }
+        .month-stat-pill { background: rgba(0,0,0,0.2); padding: 5px 10px; border-radius: 15px; border: 1px solid #444; }
+
         @media (max-width: 600px) {
             .top-nav { 
-                display: grid; 
-                grid-template-columns: repeat(3, 1fr); 
-                gap: 5px; 
+                display: flex; 
+                flex-wrap: nowrap;
+                overflow-x: auto; 
+                justify-content: flex-start; 
+                gap: 8px; 
                 position: sticky; top: 0; z-index: 100; 
                 border-radius: 0 0 12px 12px; padding: 10px; 
+                -webkit-overflow-scrolling: touch; 
+                scrollbar-width: none; 
             }
-            .nav-btn { font-size: 0.8rem; padding: 10px 2px; text-align: center; border: 1px solid #333; margin: 0; width: 100%; }
-            .nav-btn.active { background-color: var(--accent); color: #000; border: none; }
+            .top-nav::-webkit-scrollbar { display: none; }
+            .nav-btn { 
+                flex: 0 0 auto; width: auto; font-size: 0.8rem; padding: 10px 15px; 
+                text-align: center; border: 1px solid #333; margin: 0; 
+            }
+            .nav-btn.active { background-color: var(--accent); color: #000; border: 1px solid var(--accent); }
+            
             .edit-btn { opacity: 0.3; }
             .filter-row { flex-direction: column; gap: 10px; }
             
-            /* Ocultar el botón "Cargar" del menú en celular */
             #nav-btn-cargar { display: none; }
-            /* Mostrar botón flotante si no estamos en el panel de carga */
             body:not(.cargar-active) .fab-btn { display: flex; }
         }
     </style>
@@ -212,6 +229,7 @@
         <button class="nav-btn" onclick="showPanel('panel-artistas')">ARTISTAS</button>
         <button class="nav-btn" onclick="showPanel('panel-canciones')">CANCIONES</button>
         <button class="nav-btn" onclick="showPanel('panel-anios')">AÑOS</button>
+        <button class="nav-btn" onclick="showPanel('panel-meses')">MESES</button>
         <button class="nav-btn" onclick="showPanel('panel-lugares')">LUGARES</button>
         <button class="nav-btn" onclick="showPanel('panel-estadisticas')">ESTADÍSTICAS</button>
         <button class="nav-btn" onclick="showPanel('panel-datos')">DATOS</button>
@@ -260,19 +278,39 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>Año</label>
-                <input type="number" id="songYear" list="list-years" required placeholder="Ej: 2024">
+                <label>Año y Mes</label>
+                <div class="form-row">
+                    <input type="number" id="songYear" list="list-years" required placeholder="Año (Ej: 2024)">
+                    <select id="songMonth">
+                        <option value="">Mes...</option>
+                        <option value="01">01 - Enero</option>
+                        <option value="02">02 - Febrero</option>
+                        <option value="03">03 - Marzo</option>
+                        <option value="04">04 - Abril</option>
+                        <option value="05">05 - Mayo</option>
+                        <option value="06">06 - Junio</option>
+                        <option value="07">07 - Julio</option>
+                        <option value="08">08 - Agosto</option>
+                        <option value="09">09 - Septiembre</option>
+                        <option value="10">10 - Octubre</option>
+                        <option value="11">11 - Noviembre</option>
+                        <option value="12">12 - Diciembre</option>
+                    </select>
+                </div>
             </div>
+            
             <div class="form-group">
-                <label>Artista Principal</label>
-                <input type="text" id="mainArtist" list="list-artists" required autocomplete="off" onblur="syncArtistImage(this)">
-                <input type="url" id="artistImg" placeholder="Link de foto del artista principal (Opcional)" style="margin-top: 5px; font-size: 0.85em;">
+                <label>Artistas Principales (Titulares)</label>
+                <div id="mainArtistsContainer"></div>
+                <button type="button" class="btn-small" onclick="addMainArtistField()">+ Añadir titular / co-titular</button>
             </div>
+            
             <div class="form-group">
                 <label>Invitados en esta canción</label>
                 <div id="guestsContainer"></div>
                 <button type="button" class="btn-small" onclick="addGuestField()">+ Añadir invitado</button>
             </div>
+            
             <div class="form-group">
                 <label>Lugar</label>
                 <input type="text" id="concertVenue" list="list-venues" required autocomplete="off">
@@ -316,6 +354,9 @@
     </div>
     
     <div id="panel-anios" class="panel card"><div id="yearViewList"></div></div>
+    
+    <div id="panel-meses" class="panel card"><div id="monthViewList"></div></div>
+    
     <div id="panel-lugares" class="panel card"><div id="venueViewList"></div></div>
 
     <div id="panel-estadisticas" class="panel card">
@@ -355,10 +396,35 @@
     let songProgress = JSON.parse(localStorage.getItem('songProgressData')) || {};
 
     const form = document.getElementById('recordForm');
+    const mainArtistsContainer = document.getElementById('mainArtistsContainer');
     const guestsContainer = document.getElementById('guestsContainer');
     const videosContainer = document.getElementById('videosContainer');
+    let mainArtistCount = 0;
     let guestCount = 0;
-    let lastActivePanel = 'panel-artistas'; // Para saber a dónde volver desde detalle
+    let lastActivePanel = 'panel-artistas';
+
+    const monthNames = {
+        "01": "Enero", "02": "Febrero", "03": "Marzo", "04": "Abril",
+        "05": "Mayo", "06": "Junio", "07": "Julio", "08": "Agosto",
+        "09": "Septiembre", "10": "Octubre", "11": "Noviembre", "12": "Diciembre"
+    };
+
+    const monthNamesShort = {
+        "01": "Ene", "02": "Feb", "03": "Mar", "04": "Abr",
+        "05": "May", "06": "Jun", "07": "Jul", "08": "Ago",
+        "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dic"
+    };
+
+    // Función crucial para compatibilidad con versiones anteriores de los datos
+    function getMainArtists(rec) {
+        if (rec.mainArtists && Array.isArray(rec.mainArtists) && rec.mainArtists.length > 0) {
+            return rec.mainArtists;
+        }
+        if (rec.mainArtist) {
+            return [rec.mainArtist];
+        }
+        return ["Desconocido"];
+    }
 
     function showPanel(panelId) {
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -374,7 +440,7 @@
             const targetBtn = document.querySelector(`.nav-btn[onclick="showPanel('${panelId}')"]`);
             if (targetBtn) targetBtn.classList.add('active');
             
-            document.getElementById('mainNav').style.display = window.innerWidth <= 600 ? 'grid' : 'flex';
+            document.getElementById('mainNav').style.display = 'flex';
             lastActivePanel = panelId; 
         } else {
             document.getElementById('mainNav').style.display = 'none';
@@ -404,22 +470,33 @@
 
     window.addEventListener('resize', () => {
         if (document.getElementById('mainNav').style.display !== 'none') {
-            document.getElementById('mainNav').style.display = window.innerWidth <= 600 ? 'grid' : 'flex';
+            document.getElementById('mainNav').style.display = 'flex';
         }
     });
 
-    window.syncArtistImage = function(inputElem) {
+    window.syncArtistImageGen = function(inputElem) {
         const name = inputElem.value.trim();
         if (!name) return;
-        let imgInput = (inputElem.id === 'mainArtist') ? document.getElementById('artistImg') : inputElem.nextElementSibling;
+        let imgInput = inputElem.nextElementSibling;
         if (imgInput && !imgInput.value && artistImages[name]) imgInput.value = artistImages[name];
     };
+
+    function addMainArtistField(name = '', img = '') {
+        mainArtistCount++;
+        const div = document.createElement('div'); div.className = 'guest-box'; // Usamos el mismo recuadro gris
+        const isRequired = mainArtistCount === 1 ? 'required' : '';
+        div.innerHTML = `<input type="text" class="main-artist-name" list="list-artists" placeholder="Artista Titular ${mainArtistCount}" value="${name}" onblur="syncArtistImageGen(this)" ${isRequired} style="width: 100%; margin-bottom: 5px;" autocomplete="off">
+            <input type="url" class="main-artist-img" placeholder="Link de foto (Opcional)" value="${img}" style="width: 100%; font-size: 0.85em;">
+            ${mainArtistCount > 1 ? `<button type="button" class="btn-small" onclick="this.parentElement.remove()" style="margin-top:5px; background:var(--danger)">❌ Eliminar co-titular</button>` : ''}`;
+        mainArtistsContainer.appendChild(div);
+    }
 
     function addGuestField(name = '', img = '') {
         guestCount++;
         const div = document.createElement('div'); div.className = 'guest-box';
-        div.innerHTML = `<input type="text" class="guest-name" list="list-artists" placeholder="Invitado ${guestCount}" value="${name}" onblur="syncArtistImage(this)" required style="width: 100%; margin-bottom: 5px;">
-            <input type="url" class="guest-img" placeholder="Link de foto" value="${img}" style="width: 100%; font-size: 0.85em;">`;
+        div.innerHTML = `<input type="text" class="guest-name" list="list-artists" placeholder="Invitado ${guestCount}" value="${name}" onblur="syncArtistImageGen(this)" required style="width: 100%; margin-bottom: 5px;">
+            <input type="url" class="guest-img" placeholder="Link de foto" value="${img}" style="width: 100%; font-size: 0.85em;">
+            <button type="button" class="btn-small" onclick="this.parentElement.remove()" style="margin-top:5px; background:var(--danger)">❌ Eliminar invitado</button>`;
         guestsContainer.appendChild(div);
     }
 
@@ -471,26 +548,37 @@
 
     form.addEventListener('submit', function(e) {
         e.preventDefault();
-        const mainArtist = document.getElementById('mainArtist').value.trim();
-        const mainArtistImg = document.getElementById('artistImg').value.trim();
         const songNameInput = document.getElementById('songName').value.trim();
-        if(mainArtistImg) artistImages[mainArtist] = mainArtistImg;
+        
+        // Recopilar todos los artistas principales
+        let currentMainArtists = [];
+        document.querySelectorAll('.main-artist-name').forEach((input) => {
+            const name = input.value.trim();
+            const imgInput = input.nextElementSibling;
+            const img = imgInput ? imgInput.value.trim() : '';
+            if (name) {
+                currentMainArtists.push(name);
+                if (img) artistImages[name] = img;
+            }
+        });
+
+        if(currentMainArtists.length === 0) { alert('Debés ingresar al menos un artista titular.'); return; }
         
         let currP = document.getElementById('progCurrent').value; 
         let totP = document.getElementById('progTotal').value;
-        
-        if (currP === '' && totP === '') {
-            currP = '1';
-            totP = '1';
-        }
+        if (currP === '' && totP === '') { currP = '1'; totP = '1'; }
         
         songProgress[songNameInput] = { current: currP, total: totP }; 
         localStorage.setItem('songProgressData', JSON.stringify(songProgress));
 
         let currentGuests = [];
-        document.querySelectorAll('.guest-box').forEach(box => {
-            const gName = box.querySelector('.guest-name').value.trim(); const gImg = box.querySelector('.guest-img').value.trim();
-            if(gName) { currentGuests.push({ name: gName }); if(gImg) artistImages[gName] = gImg; }
+        document.querySelectorAll('.guest-box:not(#mainArtistsContainer .guest-box)').forEach(box => {
+            const gName = box.querySelector('.guest-name');
+            const gImg = box.querySelector('.guest-img');
+            if(gName && gName.value.trim()) { 
+                currentGuests.push({ name: gName.value.trim() }); 
+                if(gImg && gImg.value.trim()) artistImages[gName.value.trim()] = gImg.value.trim(); 
+            }
         });
 
         let currentVideos = [];
@@ -501,7 +589,9 @@
             id: idToSave, 
             songName: songNameInput, 
             songYear: document.getElementById('songYear').value, 
-            mainArtist: mainArtist,
+            songMonth: document.getElementById('songMonth').value,
+            mainArtists: currentMainArtists, // NUEVO ARREGLO
+            mainArtist: currentMainArtists[0], // Por compatibilidad histórica
             guestsArray: currentGuests, 
             venue: document.getElementById('concertVenue').value.trim(), 
             videosArray: currentVideos,
@@ -522,7 +612,9 @@
 
     function resetForm() {
         form.reset(); document.getElementById('editId').value = ''; document.getElementById('saveBtn').innerText = 'Guardar Canción';
-        guestsContainer.innerHTML = ''; videosContainer.innerHTML = ''; guestCount = 0; addVideoField();
+        mainArtistsContainer.innerHTML = ''; mainArtistCount = 0; addMainArtistField(); // Un titular por defecto
+        guestsContainer.innerHTML = ''; guestCount = 0; 
+        videosContainer.innerHTML = ''; addVideoField();
     }
 
     window.editRecord = function(id) {
@@ -531,12 +623,14 @@
         document.getElementById('editId').value = rec.id; 
         document.getElementById('songName').value = rec.songName; checkSongProgress();
         document.getElementById('songYear').value = rec.songYear || ''; 
-        document.getElementById('mainArtist').value = rec.mainArtist;
-        document.getElementById('artistImg').value = artistImages[rec.mainArtist] || ''; 
+        document.getElementById('songMonth').value = rec.songMonth || ''; 
         document.getElementById('concertVenue').value = rec.venue;
-        
         document.getElementById('videoDistance').value = rec.videoDistance || '';
         document.getElementById('videoQuality').value = rec.videoQuality || '';
+
+        mainArtistsContainer.innerHTML = ''; mainArtistCount = 0;
+        const mArtists = getMainArtists(rec);
+        mArtists.forEach(ma => addMainArtistField(ma, artistImages[ma] || ''));
 
         guestsContainer.innerHTML = ''; guestCount = 0;
         (rec.guestsArray || []).forEach(g => addGuestField(g.name, artistImages[g.name] || ''));
@@ -558,7 +652,9 @@
 
         let songs = new Set(); let artists = new Set(); let venues = new Set();
         recordings.forEach(r => {
-            songs.add(r.songName); artists.add(r.mainArtist); venues.add(r.venue);
+            songs.add(r.songName); 
+            getMainArtists(r).forEach(ma => artists.add(ma));
+            venues.add(r.venue);
             (r.guestsArray || []).forEach(g => artists.add(g.name));
         });
 
@@ -595,11 +691,13 @@
             </div>`;
             songRecs.forEach(perf => {
                 const guestsText = (perf.guestsArray || []).map(g => g.name).join(', ');
+                const mainArtistsText = getMainArtists(perf).join(' y ');
                 const vidsHtml = buildVideosHtml(perf);
                 const metricsHtml = getVidMetricsHtml(perf);
+                const displayMonth = perf.songMonth ? (monthNamesShort[perf.songMonth] || '') + ' ' : '';
                 html += `<div class="item-card"><button class="edit-btn" onclick="editRecord('${perf.id}')">✏️</button>
-                    Por <strong>${perf.mainArtist}</strong> ${guestsText ? `(con ${guestsText})` : ''} <br>
-                    📍 ${perf.venue} | 🗓️ ${perf.songYear || "Sin Año"}<br>
+                    Por <strong>${mainArtistsText}</strong> ${guestsText ? `(con ${guestsText})` : ''} <br>
+                    📍 ${perf.venue} | 🗓️ ${displayMonth}${perf.songYear || "Sin Año"}<br>
                     <div style="margin-top: 5px;">${vidsHtml} ${metricsHtml}</div></div>`;
             });
 
@@ -607,11 +705,11 @@
             html += `<div class="group-header"><div style="display: flex; align-items: center;"><img src="${artistImages[value] || 'https://via.placeholder.com/50/333333/FFFFFF?text=🎤'}" class="artist-img" style="margin-right: 15px;"><span>${value} (Sus canciones)</span></div></div>`;
             const artistSongs = {};
             recordings.forEach(rec => {
-                const isMain = rec.mainArtist === value;
+                const isMain = getMainArtists(rec).includes(value);
                 const isGuest = (rec.guestsArray || []).some(g => g.name === value);
                 if (isMain || isGuest) {
                     if (!artistSongs[rec.songName]) artistSongs[rec.songName] = [];
-                    artistSongs[rec.songName].push({ ...rec, wasGuest: isGuest });
+                    artistSongs[rec.songName].push({ ...rec, wasGuest: isGuest, isMain: isMain });
                 }
             });
             Object.keys(artistSongs).sort().forEach(song => {
@@ -624,10 +722,22 @@
                 artistSongs[song].forEach(perf => {
                     const vids = buildVideosHtml(perf);
                     const metricsHtml = getVidMetricsHtml(perf);
+                    const displayMonth = perf.songMonth ? (monthNamesShort[perf.songMonth] || '') + ' ' : '';
+                    const hostsText = getMainArtists(perf).join(' y ');
+                    
+                    let roleText = '';
+                    if (perf.wasGuest && !perf.isMain) {
+                        roleText = `<span class="guest-badge">INVITADO</span> de <strong>${hostsText}</strong>`;
+                    } else {
+                        roleText = `🎤 Como Titular`;
+                        const coMains = getMainArtists(perf).filter(m => m !== value);
+                        if (coMains.length > 0) roleText += ` (junto a ${coMains.join(', ')})`;
+                    }
+
                     html += `<div class="detail-sub-item">
                         <button class="edit-btn-visible" onclick="editRecord('${perf.id}')" style="float:right;">✏️ Editar</button>
-                        ${perf.wasGuest ? '<span class="guest-badge">INVITADO</span> de <strong>' + perf.mainArtist + '</strong>' : '🎤 Como Artista Principal'} <br>
-                        📍 ${perf.venue} | 🗓️ ${perf.songYear || 'Sin Año'}<br>
+                        ${roleText} <br>
+                        📍 ${perf.venue} | 🗓️ ${displayMonth}${perf.songYear || 'Sin Año'}<br>
                         <div style="margin-top: 5px;">${vids} ${metricsHtml}</div>
                     </div>`;
                 });
@@ -639,18 +749,21 @@
             const venueArtists = {};
             recordings.filter(r => r.venue === value).forEach(rec => {
                 const addPerf = (artistName, isGuest) => {
-                    if(!venueArtists[artistName]) venueArtists[artistName] = [];
-                    venueArtists[artistName].push({ ...rec, wasGuest: isGuest });
+                    const uniqueKey = JSON.stringify({ name: artistName, year: rec.songYear || "Sin Año", month: rec.songMonth || "", wasGuest: isGuest });
+                    if(!venueArtists[artistName]) venueArtists[artistName] = new Set();
+                    venueArtists[artistName].add(uniqueKey);
                 };
-                addPerf(rec.mainArtist, false);
+                getMainArtists(rec).forEach(ma => addPerf(ma, false));
                 (rec.guestsArray || []).forEach(g => addPerf(g.name, true));
             });
             
             Object.keys(venueArtists).sort().forEach(artist => {
                 const imgSrc = artistImages[artist] || 'https://via.placeholder.com/50/333333/FFFFFF?text=🎤';
                 html += `<details class="detail-accordion"><summary style="display: flex; align-items: center; justify-content: flex-start; gap: 10px;"><img src="${imgSrc}" class="artist-img" style="width: 30px; height: 30px;"> ${artist}</summary><div class="details-content">`;
-                venueArtists[artist].forEach(perf => {
-                    html += `<div class="detail-sub-item">🎵 <strong>${perf.songName}</strong> (${perf.songYear}) ${perf.wasGuest ? '<span class="guest-badge">Invitado</span>' : ''}</div>`;
+                let shows = [...venueArtists[artist]].map(str => JSON.parse(str));
+                shows.forEach(perf => {
+                    const displayMonth = perf.month ? (monthNamesShort[perf.month] || '') + ' ' : '';
+                    html += `<div class="detail-sub-item">🎵 <strong>Show:</strong> (${displayMonth}${perf.year}) ${perf.wasGuest ? '<span class="guest-badge">Invitado</span>' : ''}</div>`;
                 });
                 html += `</div></details>`;
             });
@@ -665,8 +778,11 @@
             const songs = [...new Set(recordings.map(r => r.songName))];
             const venues = [...new Set(recordings.map(r => r.venue))];
             const years = [...new Set(recordings.map(r => r.songYear || "Sin Año"))];
-            let allArtists = new Set(recordings.map(r => r.mainArtist));
-            recordings.forEach(r => (r.guestsArray || []).forEach(g => allArtists.add(g.name)));
+            let allArtists = new Set();
+            recordings.forEach(r => {
+                getMainArtists(r).forEach(ma => allArtists.add(ma));
+                (r.guestsArray || []).forEach(g => allArtists.add(g.name));
+            });
             document.getElementById('list-songs').innerHTML = songs.map(s => `<option value="${s}">`).join('');
             document.getElementById('list-artists').innerHTML = [...allArtists].map(a => `<option value="${a}">`).join('');
             document.getElementById('list-venues').innerHTML = venues.map(v => `<option value="${v}">`).join('');
@@ -676,6 +792,7 @@
         if(document.getElementById('panel-artistas').classList.contains('active')) renderArtistView();
         if(document.getElementById('panel-canciones').classList.contains('active')) renderSongView();
         if(document.getElementById('panel-anios').classList.contains('active')) renderYearView();
+        if(document.getElementById('panel-meses').classList.contains('active')) renderMonthView();
         if(document.getElementById('panel-lugares').classList.contains('active')) renderVenueView();
         if(document.getElementById('panel-estadisticas').classList.contains('active')) renderStatsView();
     }
@@ -686,12 +803,18 @@
         
         const artistMap = {};
         recordings.forEach(rec => {
-            const year = rec.songYear || "Sin Año";
-            if (!artistMap[rec.mainArtist]) artistMap[rec.mainArtist] = [];
-            artistMap[rec.mainArtist].push({ ...rec, role: 'main', displayYear: year });
+            const displayMonth = rec.songMonth ? (monthNamesShort[rec.songMonth] || '') + ' ' : '';
+            const year = displayMonth + (rec.songYear || "Sin Año");
+            const mains = getMainArtists(rec);
+            
+            mains.forEach(ma => {
+                if (!artistMap[ma]) artistMap[ma] = [];
+                artistMap[ma].push({ ...rec, role: 'main', displayYear: year, allMains: mains });
+            });
+            
             (rec.guestsArray || []).forEach(g => {
                 if (!artistMap[g.name]) artistMap[g.name] = [];
-                artistMap[g.name].push({ ...rec, role: 'guest', host: rec.mainArtist, displayYear: year });
+                artistMap[g.name].push({ ...rec, role: 'guest', hosts: mains, displayYear: year });
             });
         });
 
@@ -709,24 +832,31 @@
                 const metricsHtml = getVidMetricsHtml(song);
                 if (song.role === 'main') {
                     const guestsText = (song.guestsArray || []).map(g => g.name).join(', ');
+                    const coMains = song.allMains.filter(m => m !== artist);
+                    const coMainsText = coMains.length > 0 ? ` <span style="color:var(--accent); font-size:0.9em;">(+ ${coMains.join(', ')})</span>` : '';
+                    
                     return `<div class="item-card"><button class="edit-btn" onclick="editRecord('${song.id}')">✏️</button>
-                        <strong>${song.songName}</strong> (${song.displayYear}) - ${song.venue} 
-                        ${guestsText ? `<br><small style="color:var(--accent)">Con: ${guestsText}</small>` : ''}
+                        <strong>${song.songName}</strong>${coMainsText} (${song.displayYear}) - ${song.venue} 
+                        ${guestsText ? `<br><small style="color:var(--accent)">Con invitados: ${guestsText}</small>` : ''}
                         <div style="margin-top: 5px;">${vidsHtml} ${metricsHtml}</div></div>`;
                 } else {
                     return `<div class="item-card"><button class="edit-btn" onclick="editRecord('${song.id}')">✏️</button>
                         <span class="guest-badge">INVITADO</span><strong>${song.songName}</strong> (${song.displayYear})<br>
-                        <small style="color:#aaa">En el recital de <strong>${song.host}</strong> (${song.venue})</small>
+                        <small style="color:#aaa">En el recital de <strong>${song.hosts.join(' y ')}</strong> (${song.venue})</small>
                         <div style="margin-top: 5px;">${vidsHtml} ${metricsHtml}</div></div>`;
                 }
             }).join('');
-            return `<div>
-                <div class="group-header">
+            
+            return `
+            <details style="margin-bottom: 5px;">
+                <summary class="group-header">
                     <div style="display: flex; align-items: center;"><img src="${imgSrc}" class="artist-img" style="margin-right: 15px;"><span>${artist}</span></div>
-                    <small style="color:#aaa;">(${artistMap[artist].length} canciones)</small>
+                    <small style="color:#aaa;"><span class="toggle-icon">(${artistMap[artist].length} canciones)</span></small>
+                </summary>
+                <div style="padding-top: 5px;">
+                    ${songsHtml}
                 </div>
-                ${songsHtml}
-            </div>`;
+            </details>`;
         }).join('');
     }
 
@@ -764,10 +894,12 @@
             const dots = getDotsHTML(song);
             const html = grouped[song].map(perf => {
                 const guestsText = (perf.guestsArray || []).map(g => g.name).join(', ');
+                const mainsText = getMainArtists(perf).join(' y ');
                 const vidsHtml = buildVideosHtml(perf);
                 const metricsHtml = getVidMetricsHtml(perf);
+                const displayMonth = perf.songMonth ? (monthNamesShort[perf.songMonth] || '') + ' ' : '';
                 return `<div class="item-card"><button class="edit-btn" onclick="editRecord('${perf.id}')">✏️</button>
-                    Por <strong>${perf.mainArtist}</strong> ${guestsText ? `(con ${guestsText})` : ''} en ${perf.venue} (${perf.songYear || "Sin Año"})
+                    Por <strong>${mainsText}</strong> ${guestsText ? `(con ${guestsText})` : ''} en ${perf.venue} (${displayMonth}${perf.songYear || "Sin Año"})
                     <div style="margin-top: 5px;">${vidsHtml} ${metricsHtml}</div></div>`;
             }).join('');
             
@@ -785,18 +917,83 @@
         const container = document.getElementById('yearViewList');
         const grouped = recordings.reduce((acc, curr) => {
             const year = curr.songYear || "Sin Año";
+            const month = curr.songMonth || "";
+            const venue = curr.venue || "Sin Lugar";
             if (!acc[year]) acc[year] = new Set();
-            acc[year].add(curr.mainArtist);
-            (curr.guestsArray || []).forEach(g => acc[year].add(g.name));
+            
+            const addArtist = (name, m, v) => {
+                acc[year].add(JSON.stringify({ name: name, month: m, venue: v }));
+            };
+            
+            getMainArtists(curr).forEach(ma => addArtist(ma, month, venue));
+            (curr.guestsArray || []).forEach(g => addArtist(g.name, month, venue));
             return acc;
         }, {});
+        
         const sortedYears = Object.keys(grouped).sort((a,b) => b - a);
         container.innerHTML = sortedYears.map(year => {
-            const artistsHtml = [...grouped[year]].sort().map(artist => {
-                const imgSrc = artistImages[artist] || 'https://via.placeholder.com/50/333333/FFFFFF?text=🎤';
-                return `<div class="item-card" style="display: flex; align-items: center; cursor: pointer;" onclick="openDetailView('artist', '${artist.replace(/'/g, "\\'")}')"><img src="${imgSrc}" class="artist-img" style="width: 30px; height: 30px; margin-right: 15px;"> <strong>${artist}</strong></div>`;
+            const artistsList = [...grouped[year]].map(str => JSON.parse(str));
+            artistsList.sort((a,b) => a.name.localeCompare(b.name));
+            
+            const artistsHtml = artistsList.map(item => {
+                const imgSrc = artistImages[item.name] || 'https://via.placeholder.com/50/333333/FFFFFF?text=🎤';
+                const monthDisplay = item.month ? monthNamesShort[item.month] : '';
+                const venueDisplay = item.venue && item.venue !== "Sin Lugar" ? item.venue : '';
+                let extraInfo = [monthDisplay, venueDisplay].filter(Boolean).join(' - ');
+                if (extraInfo) extraInfo = ` <small style="color:var(--accent); margin-left:8px;">(${extraInfo})</small>`;
+                
+                return `<div class="item-card" style="display: flex; align-items: center; cursor: pointer;" onclick="openDetailView('artist', '${item.name.replace(/'/g, "\\'")}')">
+                    <img src="${imgSrc}" class="artist-img" style="width: 30px; height: 30px; margin-right: 15px;"> 
+                    <strong>${item.name}</strong>${extraInfo}
+                </div>`;
             }).join('');
-            return `<div><div class="group-header">🗓️ ${year} <small style="margin-left:auto; font-size:0.8em; color:#aaa;">(${grouped[year].size} Artistas)</small></div>${artistsHtml}</div>`;
+            
+            return `<div><div class="group-header">🗓️ ${year} <small style="margin-left:auto; font-size:0.8em; color:#aaa;">(${artistsList.length} Artistas)</small></div>${artistsHtml}</div>`;
+        }).join('');
+    }
+
+    function renderMonthView() {
+        const container = document.getElementById('monthViewList');
+        const grouped = recordings.reduce((acc, curr) => {
+            const monthStr = curr.songMonth || "Sin Mes";
+            if (!acc[monthStr]) acc[monthStr] = new Set();
+            const yearStr = curr.songYear || "Sin Año";
+            const venueStr = curr.venue || "Sin Lugar";
+            
+            const addArtist = (name) => {
+                acc[monthStr].add(JSON.stringify({ name: name, year: yearStr, venue: venueStr }));
+            };
+            
+            getMainArtists(curr).forEach(ma => addArtist(ma));
+            (curr.guestsArray || []).forEach(g => addArtist(g.name));
+            return acc;
+        }, {});
+
+        const sortedMonths = Object.keys(grouped).sort((a, b) => {
+            if (a === "Sin Mes") return 1;
+            if (b === "Sin Mes") return -1;
+            return a.localeCompare(b);
+        });
+
+        container.innerHTML = sortedMonths.map(month => {
+            const displayMonth = monthNames[month] || month;
+            const artistsList = [...grouped[month]].map(str => JSON.parse(str));
+            
+            artistsList.sort((a, b) => a.name.localeCompare(b.name));
+            
+            const artistsHtml = artistsList.map(item => {
+                const imgSrc = artistImages[item.name] || 'https://via.placeholder.com/50/333333/FFFFFF?text=🎤';
+                const venueDisplay = item.venue && item.venue !== "Sin Lugar" ? item.venue : '';
+                let extraInfo = [item.year, venueDisplay].filter(Boolean).join(' - ');
+                if (extraInfo) extraInfo = ` <small style="color:var(--accent); margin-left:8px;">(${extraInfo})</small>`;
+
+                return `<div class="item-card" style="display: flex; align-items: center; cursor: pointer;" onclick="openDetailView('artist', '${item.name.replace(/'/g, "\\'")}')">
+                    <img src="${imgSrc}" class="artist-img" style="width: 30px; height: 30px; margin-right: 15px;"> 
+                    <strong>${item.name}</strong>${extraInfo}
+                </div>`;
+            }).join('');
+            
+            return `<div><div class="group-header">📅 ${displayMonth} <small style="margin-left:auto; font-size:0.8em; color:#aaa;">(${artistsList.length} Artistas)</small></div>${artistsHtml}</div>`;
         }).join('');
     }
 
@@ -806,16 +1003,33 @@
         recordings.forEach(rec => {
             const venue = rec.venue || "Lugar Desconocido";
             if (!venueMap[venue]) venueMap[venue] = new Set();
-            venueMap[venue].add(rec.mainArtist);
-            (rec.guestsArray || []).forEach(g => venueMap[venue].add(g.name));
+            
+            const addPerf = (name) => {
+                venueMap[venue].add(JSON.stringify({ name: name, year: rec.songYear || "Sin Año", month: rec.songMonth || "" }));
+            };
+            
+            getMainArtists(rec).forEach(ma => addPerf(ma));
+            (rec.guestsArray || []).forEach(g => addPerf(g.name));
         });
+        
         const sortedVenues = Object.keys(venueMap).sort();
         container.innerHTML = sortedVenues.map(venue => {
-            const artistsHtml = [...venueMap[venue]].sort().map(artist => {
-                const imgSrc = artistImages[artist] || 'https://via.placeholder.com/50/333333/FFFFFF?text=🎤';
-                return `<div class="item-card" style="display: flex; align-items: center; cursor: pointer;" onclick="openDetailView('artist', '${artist.replace(/'/g, "\\'")}')"><img src="${imgSrc}" class="artist-img" style="width: 30px; height: 30px; margin-right: 15px;"> <strong>${artist}</strong></div>`;
+            const performances = [...venueMap[venue]].map(str => JSON.parse(str));
+            performances.sort((a, b) => a.name.localeCompare(b.name));
+            
+            const artistsHtml = performances.map(perf => {
+                const imgSrc = artistImages[perf.name] || 'https://via.placeholder.com/50/333333/FFFFFF?text=🎤';
+                const monthDisplay = perf.month ? monthNamesShort[perf.month] : '';
+                let extraInfo = [monthDisplay, perf.year].filter(Boolean).join(' ');
+                if (extraInfo) extraInfo = ` <small style="color:var(--accent); margin-left:8px;">(${extraInfo})</small>`;
+                
+                return `<div class="item-card" style="display: flex; align-items: center; cursor: pointer;" onclick="openDetailView('artist', '${perf.name.replace(/'/g, "\\'")}')">
+                    <img src="${imgSrc}" class="artist-img" style="width: 30px; height: 30px; margin-right: 15px;"> 
+                    <strong>${perf.name}</strong>${extraInfo}
+                </div>`;
             }).join('');
-            return `<div><div class="group-header" style="cursor: pointer;" onclick="openDetailView('venue', '${venue.replace(/'/g, "\\'")}')">📍 ${venue} <small style="margin-left:auto; font-size:0.8em; color:#aaa;">(${venueMap[venue].size} Artistas)</small></div>${artistsHtml}</div>`;
+            
+            return `<div><div class="group-header" style="cursor: pointer;" onclick="openDetailView('venue', '${venue.replace(/'/g, "\\'")}')">📍 ${venue} <small style="margin-left:auto; font-size:0.8em; color:#aaa;">(${performances.length} Artistas)</small></div>${artistsHtml}</div>`;
         }).join('');
     }
 
@@ -823,32 +1037,51 @@
         const container = document.getElementById('statsContainer');
         if (recordings.length === 0) { container.innerHTML = '<p style="text-align:center;">No hay datos.</p>'; return; }
 
-        let allArtistsSet = new Set(); let songsPerArtist = {}; let artistsPerVenue = {}; let artistsPerYear = {};
+        let allArtistsSet = new Set(); 
+        let songsPerArtist = {}; 
+        let artistsPerVenue = {}; 
+        let artistsPerYear = {}; 
+        let artistsPerMonth = {};
+        
         recordings.forEach(rec => {
             const venue = rec.venue || "Desconocido";
             const year = rec.songYear || "Sin Año";
-            const artistsInRecord = [rec.mainArtist, ...(rec.guestsArray || []).map(g => g.name)];
+            const month = rec.songMonth || "Sin Mes";
+            const artistsInRecord = [...getMainArtists(rec), ...(rec.guestsArray || []).map(g => g.name)];
             
             artistsInRecord.forEach(artist => {
-                allArtistsSet.add(artist);
+                allArtistsSet.add(artist); 
                 songsPerArtist[artist] = (songsPerArtist[artist] || 0) + 1;
                 
+                const uniqueKey = `${artist}|${venue}|${year}|${month}`;
+                
                 if (!artistsPerVenue[venue]) artistsPerVenue[venue] = new Set();
-                artistsPerVenue[venue].add(artist);
+                artistsPerVenue[venue].add(uniqueKey);
 
                 if (!artistsPerYear[year]) artistsPerYear[year] = new Set();
-                artistsPerYear[year].add(artist);
+                artistsPerYear[year].add(uniqueKey);
+
+                if (!artistsPerMonth[month]) artistsPerMonth[month] = new Set();
+                artistsPerMonth[month].add(uniqueKey);
             });
         });
 
         window.statsData = { songsPerArtist, artistsPerVenue, artistsPerYear };
         
+        let monthHtml = Object.keys(artistsPerMonth)
+            .sort((a,b) => a.localeCompare(b))
+            .map(m => {
+                let mName = monthNames[m] || m;
+                return `<span class="month-stat-pill"><strong>${mName}</strong>: ${artistsPerMonth[m].size}</span>`;
+            }).join('');
+
         container.innerHTML = `
             <div class="stats-grid">
                 <div class="stat-box"><h3>Grabaciones</h3><p class="number">${recordings.length}</p></div>
                 <div class="stat-box"><h3>Canciones</h3><p class="number">${new Set(recordings.map(r => r.songName)).size}</p></div>
                 <div class="stat-box"><h3>Cantantes Vistos</h3><p class="number">${allArtistsSet.size}</p></div>
             </div>
+            
             <div class="stats-grid">
                 <div class="stat-list">
                     <h3>🎤 Por Cantante 
@@ -867,6 +1100,13 @@
                         <label class="lupa-container"><span class="lupa-icon">🔍</span><input type="text" class="lupa-input" placeholder="Buscar..." onkeyup="filterStatsList('listaAnios', this.value)"></label>
                     </h3>
                     <div id="listaAnios">${generateStatsListHTML('anios', '')}</div>
+                </div>
+            </div>
+
+            <div class="stat-list-small">
+                <h4>📅 Por Mes</h4>
+                <div class="month-stats-container">
+                    ${monthHtml}
                 </div>
             </div>
         `;
@@ -892,7 +1132,7 @@
             return Object.entries(window.statsData.artistsPerYear)
                 .filter(([yr, set]) => yr.toString().includes(query))
                 .sort((a, b) => b[0] - a[0])
-                .map(([yr, set]) => `<div class="stat-row"><span>Año ${yr}</span> <strong>${set.size} artistas</strong></div>`).join('') || '<div style="color:#666; font-size:0.9em; padding:10px;">Sin resultados</div>';
+                .map(([yr, set]) => `<div class="stat-row"><span>${yr}</span> <strong>${set.size} artistas</strong></div>`).join('') || '<div style="color:#666; font-size:0.9em; padding:10px;">Sin resultados</div>';
         }
     }
 
