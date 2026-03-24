@@ -105,7 +105,7 @@
         .guest-box { background-color: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px dashed #555; display: flex; flex-direction: column; gap: 6px; }
         
         .btn-small { background-color: #333; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.9em; margin-top: 5px; width: fit-content; }
-        .btn-danger { background-color: var(--danger); color: white; width: 100%; padding: 15px; font-size: 1.1em; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 20px; }
+        .btn-danger { background-color: var(--danger); color: white; width: 100%; padding: 15px; font-size: 1.1em; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
 
         /* Botón Flotante para Celular */
         .fab-btn {
@@ -322,7 +322,10 @@
                 <label>Lugar</label>
                 <input type="text" id="concertVenue" list="list-venues" required autocomplete="off">
             </div>
+            
             <button type="submit" class="submit-btn" id="saveBtn">Guardar Canción</button>
+            <button type="button" class="btn-danger" id="deleteBtn" style="display: none;" onclick="deleteRecord()">🗑️ Eliminar Grabación</button>
+            
         </form>
     </div>
 
@@ -631,11 +634,29 @@
     });
 
     function resetForm() {
-        form.reset(); document.getElementById('editId').value = ''; document.getElementById('saveBtn').innerText = 'Guardar Canción';
+        form.reset(); 
+        document.getElementById('editId').value = ''; 
+        document.getElementById('saveBtn').innerText = 'Guardar Canción';
+        document.getElementById('deleteBtn').style.display = 'none'; // Se oculta el botón eliminar
         mainArtistsContainer.innerHTML = ''; mainArtistCount = 0; addMainArtistField(); 
         guestsContainer.innerHTML = ''; guestCount = 0; 
         videosContainer.innerHTML = ''; addVideoField();
     }
+
+    // --- NUEVA FUNCIÓN PARA ELIMINAR GRABACIÓN ---
+    window.deleteRecord = function() {
+        const idToDelete = document.getElementById('editId').value;
+        if (!idToDelete) return;
+        
+        if (confirm('¿Estás seguro de que querés eliminar esta grabación? Esta acción no se puede deshacer.')) {
+            recordings = recordings.filter(r => r.id.toString() !== idToDelete.toString());
+            localStorage.setItem('recitalData', JSON.stringify(recordings));
+            
+            alert('Grabación eliminada correctamente.');
+            resetForm();
+            showPanel(lastActivePanel);
+        }
+    };
 
     window.editRecord = function(id) {
         const rec = recordings.find(r => r.id.toString() === id.toString());
@@ -658,6 +679,7 @@
         if (videos.length === 0) addVideoField(); else videos.forEach(vUrl => addVideoField(vUrl));
         
         document.getElementById('saveBtn').innerText = 'Actualizar Grabación';
+        document.getElementById('deleteBtn').style.display = 'block'; // Muestra el botón eliminar
         showPanel('panel-cargar'); window.scrollTo(0, 0);
     };
 
@@ -786,7 +808,6 @@
         if(document.getElementById('panel-estadisticas').classList.contains('active')) renderStatsView();
     }
 
-    // --- FUNCIÓN EDITAR ACOMPAÑANTES ---
     window.editCompanions = function(showKey) {
         event.stopPropagation(); 
         const currentCompanions = companionsData[showKey] ? companionsData[showKey].join(', ') : '';
@@ -804,7 +825,6 @@
         }
     };
 
-    /* VISTA SHOWS (AGRUPA SETLISTS Y ACOMPAÑANTES DISCRETOS) */
     function renderShowsView() {
         const container = document.getElementById('showsViewList');
         const showsMap = {};
@@ -832,7 +852,6 @@
             const displayMonth = show.month && show.month !== "00" ? monthNamesShort[show.month] + " " : "";
             const dateText = show.year ? `${displayMonth}${show.year}` : "Fecha Desconocida";
             
-            // Amigos discretos
             const compList = companionsData[key] || [];
             const compText = compList.length > 0 ? `<span style="color: #aaa; margin-left: 8px; font-style: italic;" title="Acompañantes">👥 ${compList.join(', ')}</span>` : '';
 
