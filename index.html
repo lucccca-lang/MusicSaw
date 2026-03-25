@@ -449,8 +449,8 @@
         <hr style="border: 1px solid #333; margin: 30px 0;">
         <div class="form-group">
             <label>Importar Copia de Seguridad</label>
-            <input type="file" id="importFile" accept=".json" style="margin-bottom: 10px; color: var(--text-main);">
-            <button class="submit-btn" onclick="importData()" style="background-color: #2196F3;">⬆️ Cargar Backup</button>
+            <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData()">
+            <button class="submit-btn" onclick="document.getElementById('importFile').click()" style="background-color: #2196F3;">⬆️ Cargar Backup</button>
         </div>
         <hr style="border: 1px solid #333; margin: 30px 0;">
         <div class="form-group">
@@ -1464,9 +1464,11 @@
         dlAnchorElem.setAttribute("download", "backup_recitales.json"); dlAnchorElem.click();
     }
     
-    function importData() {
+    // NUEVA FUNCIÓN PARA IMPORTAR DIRECTAMENTE AL SELECCIONAR
+    window.importData = function() {
         const fileInput = document.getElementById('importFile');
-        if (!fileInput.files.length) return alert('Selecciona archivo.');
+        if (!fileInput.files.length) return; // Si cancela la ventana, no hace nada
+        
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
@@ -1484,9 +1486,16 @@
                     localStorage.setItem('companionsData', JSON.stringify(companionsData));
                     localStorage.setItem('showTypesData', JSON.stringify(showTypesData));
                     
-                    alert('Importado OK!'); renderUI();
-                } else alert('Formato erróneo.');
-            } catch (err) { alert('Error de lectura.'); }
+                    alert('¡Importado correctamente!'); 
+                    renderUI();
+                } else {
+                    alert('El archivo no tiene el formato correcto.');
+                }
+            } catch (err) { 
+                alert('Hubo un error al leer el archivo.'); 
+            }
+            // Limpiamos el input por si querés volver a cargar el mismo archivo
+            fileInput.value = ''; 
         };
         reader.readAsText(fileInput.files[0]);
     }
