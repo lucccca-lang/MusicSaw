@@ -48,14 +48,23 @@
         
         .container { max-width: 900px; margin: 0 auto; }
 
-        /* Buscador Global */
-        .global-search-wrapper { position: relative; margin-bottom: 20px; }
+        /* Buscador Global y Modo Nostalgia */
+        .global-search-wrapper { position: relative; margin-bottom: 20px; display: flex; gap: 10px; }
         .global-search-input {
-            width: 100%; padding: 15px; border-radius: 25px; border: 2px solid var(--accent);
+            flex: 1; padding: 15px; border-radius: 25px; border: 2px solid var(--accent);
             background-color: var(--card-bg); color: var(--text-main); font-size: 1.1rem;
             box-sizing: border-box; outline: none; transition: 0.3s;
         }
         .global-search-input:focus { box-shadow: 0 0 10px rgba(187, 134, 252, 0.5); }
+        
+        .btn-nostalgia {
+            background-color: #2a2a2a; color: var(--text-main);
+            border: 1px solid #555; padding: 0 20px; border-radius: 25px;
+            cursor: pointer; font-weight: bold; font-size: 0.95rem;
+            transition: 0.2s; white-space: nowrap; text-transform: uppercase;
+        }
+        .btn-nostalgia:hover { background-color: #333; border-color: #888; }
+
         .search-results {
             position: absolute; top: 100%; left: 0; right: 0; background-color: var(--card-bg);
             border-radius: 12px; margin-top: 5px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
@@ -219,6 +228,7 @@
         .loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: none; justify-content: center; align-items: center; color: var(--accent); font-size: 1.5rem; font-weight: bold; }
 
         @media (max-width: 600px) {
+            .global-search-wrapper { flex-direction: column; }
             .top-nav { 
                 display: flex; flex-wrap: nowrap; overflow-x: auto; 
                 justify-content: flex-start; gap: 8px; position: sticky; top: 0; z-index: 100; 
@@ -246,6 +256,7 @@
 
     <div class="global-search-wrapper">
         <input type="text" id="globalSearchInput" class="global-search-input" placeholder="🔍 Buscar canción, cantante, lugar o amigo..." autocomplete="off" oninput="handleGlobalSearch()">
+        <button class="btn-nostalgia" onclick="triggerNostalgia()" title="Reproducir un show al azar">🎲 Nostalgia</button>
         <div id="globalSearchResults" class="search-results"></div>
     </div>
 
@@ -301,7 +312,7 @@
             <div class="form-group">
                 <label>Artistas Principales (Titulares)</label>
                 <div id="mainArtistsContainer"></div>
-                <button type="button" class="btn-small" onclick="addMainArtistField()">+ Añadir titular / co-titular</button>
+                <button type="button" class="btn-small" onclick="addMainArtistField()">+ Añadir titular</button>
             </div>
             
             <div class="form-group">
@@ -665,7 +676,6 @@
         document.getElementById('videoDistance').value = lastRec.videoDistance || '';
         document.getElementById('videoQuality').value = lastRec.videoQuality || '';
 
-        // Copiar estado de Telonero
         document.getElementById('isTelonero').checked = lastRec.isTelonero || false;
         toggleTeloneroField();
         document.getElementById('teloneroMainArtist').value = lastRec.teloneroMainArtist || '';
@@ -857,6 +867,53 @@
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.global-search-wrapper')) { document.getElementById('globalSearchResults').style.display = 'none'; }
     });
+
+    // NUEVO: Función para el MODO NOSTALGIA
+    window.triggerNostalgia = function() {
+        if (recordings.length === 0) {
+            alert('Aún no tenés grabaciones guardadas para recordar.');
+            return;
+        }
+
+        const randomIndex = Math.floor(Math.random() * recordings.length);
+        const rec = recordings[randomIndex];
+
+        const container = document.getElementById('detalleContent');
+        const mainArtistsText = getMainArtists(rec).join(' y ');
+        const guestsText = (rec.guestsArray || []).map(g => g.name).join(', ');
+        const displayMonth = rec.songMonth ? (monthNames[rec.songMonth] || '') + ' ' : '';
+        const yearText = rec.songYear || "Sin Año";
+        const vidsHtml = buildVideosHtml(rec);
+        
+        let teloneroTag = rec.isTelonero ? `<span class="telonero-badge" style="display:inline-block; margin-top:5px;">TELONERO de ${rec.teloneroMainArtist}</span>` : '';
+
+        let html = `
+            <div class="group-header" style="justify-content: center; font-size: 1.5rem; text-align: center;">
+                🎲 VIAJE EN EL TIEMPO 🎲
+            </div>
+            <div class="item-card" style="text-align: center; padding: 40px 20px;">
+                <h2 style="color: var(--accent); margin-top: 0; text-transform: none; letter-spacing: normal;">${rec.songName}</h2>
+                
+                <p style="font-size: 1.2rem; line-height: 1.6; color: var(--text-main);">
+                    Estabas viendo a <strong>${mainArtistsText}</strong> ${guestsText ? `(con ${guestsText})` : ''} <br>
+                    ${teloneroTag} <br><br>
+                    📍 En <strong>${rec.venue}</strong> <br>
+                    🗓️ En <strong>${displayMonth}${yearText}</strong>
+                </p>
+                
+                <div style="margin-top: 30px; font-size: 1.3rem;">
+                    ${vidsHtml ? vidsHtml : '<span style="color:#aaa; font-style: italic;">No hay video guardado 😢</span>'}
+                </div>
+                
+                <div style="margin-top: 15px;">${getVidMetricsHtml(rec)}</div>
+                
+                <button class="btn-nostalgia" onclick="triggerNostalgia()" style="margin-top: 40px; padding: 15px 30px; font-size: 1.1rem;">🎲 Tirar de nuevo</button>
+            </div>
+        `;
+
+        container.innerHTML = html;
+        showPanel('panel-detalle');
+    };
 
     window.openDetailView = function(type, value) {
         const container = document.getElementById('detalleContent');
@@ -1464,10 +1521,9 @@
         dlAnchorElem.setAttribute("download", "backup_recitales.json"); dlAnchorElem.click();
     }
     
-    // NUEVA FUNCIÓN PARA IMPORTAR DIRECTAMENTE AL SELECCIONAR
     window.importData = function() {
         const fileInput = document.getElementById('importFile');
-        if (!fileInput.files.length) return; // Si cancela la ventana, no hace nada
+        if (!fileInput.files.length) return; 
         
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -1494,7 +1550,6 @@
             } catch (err) { 
                 alert('Hubo un error al leer el archivo.'); 
             }
-            // Limpiamos el input por si querés volver a cargar el mismo archivo
             fileInput.value = ''; 
         };
         reader.readAsText(fileInput.files[0]);
