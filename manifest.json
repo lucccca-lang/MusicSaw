@@ -1,0 +1,21 @@
+{
+  "name": "Music Saw",
+  "short_name": "Music Saw",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#bb86fc",
+  "description": "Tu historial de recitales en vivo",
+  "icons": [
+    {
+      "src": "logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
