@@ -580,18 +580,17 @@
 
     // --- 3. FUNCIONES DE AUTH Y BASE DE DATOS ---
 
-    // Iniciar sesión con redirección (Compatible con Safari, Instagram, celulares, etc.)
     window.loginWithGoogle = function() {
         document.getElementById('loader').style.display = 'flex';
         const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithRedirect(provider);
+        
+        auth.signInWithPopup(provider).then((result) => {
+            // El login funcionó, Firebase ahora va a buscar tus datos
+        }).catch((error) => {
+            document.getElementById('loader').style.display = 'none';
+            alert("Error de Google: " + error.message);
+        });
     }
-
-    // Atrapamos los errores si el redirect falla o el usuario cancela
-    auth.getRedirectResult().catch((error) => {
-        document.getElementById('loader').style.display = 'none';
-        alert("Error al iniciar sesión: " + error.message);
-    });
 
     window.logout = function() {
         auth.signOut();
