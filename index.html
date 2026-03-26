@@ -8,6 +8,10 @@
     <link rel="icon" href="logo.jpg">
     <link rel="apple-touch-icon" href="logo.jpg">
     
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
@@ -38,15 +42,38 @@
             padding: 20px;
             transition: background-color 0.3s, color 0.3s;
         }
+
+        /* Pantalla de Login */
+        .login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-color); z-index: 10000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .login-card {
+            background-color: var(--card-bg); padding: 40px; border-radius: 12px;
+            text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            max-width: 400px; width: 90%;
+        }
+        .btn-google {
+            background-color: #ffffff; color: #444; border: none; padding: 12px 25px;
+            border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1.1rem;
+            display: inline-flex; align-items: center; justify-content: center; gap: 10px; margin-top: 20px; width: 100%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s;
+        }
+        .btn-google:hover { background-color: #f1f1f1; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        .btn-google img { width: 20px; }
         
         .header-wrapper { position: relative; display: flex; justify-content: center; align-items: center; margin-bottom: 20px; }
         .header-wrapper h1 { margin: 0; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
         .theme-toggle { position: absolute; right: 0; font-size: 1.5rem; cursor: pointer; user-select: none; transition: 0.3s; }
         .theme-toggle:hover { transform: scale(1.1); }
+        
+        .user-profile { position: absolute; left: 0; display: none; align-items: center; gap: 10px; }
+        .user-profile img { width: 35px; height: 35px; border-radius: 50%; border: 2px solid var(--accent); }
 
         h2 { text-align: center; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; margin-top: 0; }
         
-        .container { max-width: 900px; margin: 0 auto; }
+        .container { max-width: 900px; margin: 0 auto; display: none; } /* Oculto por defecto hasta loguear */
 
         /* Buscador Global y Modo Nostalgia */
         .global-search-wrapper { position: relative; margin-bottom: 20px; display: flex; gap: 10px; }
@@ -116,21 +143,10 @@
         .btn-small { background-color: #333; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.9em; margin-top: 5px; width: fit-content; }
         
         .btn-outlined {
-            background-color: transparent; 
-            color: var(--accent); 
-            border: 2px solid var(--accent); 
-            padding: 8px 15px; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            font-size: 0.9em; 
-            font-weight: bold;
-            margin-top: 0;
-            transition: 0.2s;
+            background-color: transparent; color: var(--accent); border: 2px solid var(--accent); 
+            padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.9em; font-weight: bold; margin-top: 0; transition: 0.2s;
         }
-        .btn-outlined:hover {
-            background-color: var(--accent);
-            color: #000;
-        }
+        .btn-outlined:hover { background-color: var(--accent); color: #000; }
 
         .btn-danger { background-color: var(--danger); color: white; width: 100%; padding: 15px; font-size: 1.1em; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
 
@@ -157,13 +173,8 @@
         details:not([open]) > summary.group-header .toggle-icon::after { content: " ▼"; }
         
         .artist-img { 
-            width: 40px; height: 40px; 
-            border-radius: 50%; 
-            object-fit: cover; 
-            object-position: center; 
-            aspect-ratio: 1/1; 
-            border: 2px solid var(--accent); background-color: #444; 
-            flex-shrink: 0; 
+            width: 40px; height: 40px; border-radius: 50%; object-fit: cover; object-position: center; 
+            aspect-ratio: 1/1; border: 2px solid var(--accent); background-color: #444; flex-shrink: 0; 
         }
         
         .item-card { padding: 15px; border-bottom: 1px solid #444; margin-left: 20px; line-height: 1.5; position: relative; }
@@ -225,7 +236,7 @@
         .wrapped-stat-value { font-size: 80px; font-weight: bold; color: white; margin-top: 15px; }
         .wrapped-stat-value span { color: #bb86fc; }
         .wrapped-footer { margin-top: auto; font-size: 40px; color: #666; font-weight: bold; letter-spacing: 10px;}
-        .loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: none; justify-content: center; align-items: center; color: var(--accent); font-size: 1.5rem; font-weight: bold; }
+        .loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; justify-content: center; align-items: center; color: var(--accent); font-size: 1.5rem; font-weight: bold; }
 
         @media (max-width: 600px) {
             .global-search-wrapper { flex-direction: column; }
@@ -246,10 +257,24 @@
 </head>
 <body>
 
-<div id="loader" class="loader-overlay">Generando resumen... 📸</div>
+<div id="login-screen" class="login-overlay">
+    <div class="login-card">
+        <h1 style="color: var(--accent); text-transform: uppercase; letter-spacing: 2px; margin-top: 0;">Music Saw</h1>
+        <p style="color: var(--text-muted); margin-bottom: 30px;">Tu historial de recitales y shows en vivo, ahora sincronizado en la nube.</p>
+        <button class="btn-google" onclick="loginWithGoogle()">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google Logo">
+            Ingresar con Google
+        </button>
+    </div>
+</div>
 
-<div class="container">
+<div id="loader" class="loader-overlay" style="display: none;">Cargando...</div>
+
+<div class="container" id="main-app">
     <div class="header-wrapper">
+        <div class="user-profile" id="userProfileBox">
+            <img id="userAvatar" src="" alt="Perfil" title="Logueado en Firebase">
+        </div>
         <h1>MUSIC SAW</h1>
         <span class="theme-toggle" id="themeIcon" onclick="toggleNightMode()" title="Cambiar a Modo Claro">🌙</span>
     </div>
@@ -452,8 +477,17 @@
     </div>
 
     <div id="panel-datos" class="panel card">
-        <h2>Datos</h2>
-        <div class="form-group" style="margin-top: 20px;">
+        <h2>Datos y Cuenta</h2>
+        
+        <div class="form-group" style="margin-top: 20px; background-color: rgba(255, 76, 76, 0.1); padding: 15px; border-radius: 8px; border: 1px solid var(--danger);">
+            <label style="color: var(--danger);">Sesión Actual</label>
+            <p style="margin: 0 0 10px 0; font-size: 0.9em; color: var(--text-muted);">Estás conectado y tus datos se guardan en la nube.</p>
+            <button class="btn-danger" onclick="logout()" style="margin-top: 0; padding: 10px;">👋 Cerrar Sesión</button>
+        </div>
+
+        <hr style="border: 1px solid #333; margin: 30px 0;">
+
+        <div class="form-group">
             <label>Exportar Copia de Seguridad</label>
             <button class="submit-btn" onclick="exportData()" style="background-color: #4CAF50;">⬇️ Descargar Backup</button>
         </div>
@@ -498,12 +532,33 @@
 </div>
 
 <script>
-    let recordings = JSON.parse(localStorage.getItem('recitalData')) || [];
-    let artistImages = JSON.parse(localStorage.getItem('artistImagesData')) || {};
-    let songProgress = JSON.parse(localStorage.getItem('songProgressData')) || {};
-    let companionsData = JSON.parse(localStorage.getItem('companionsData')) || {}; 
-    let showTypesData = JSON.parse(localStorage.getItem('showTypesData')) || {}; 
+    // --- 1. CONFIGURACIÓN DE FIREBASE ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyD-jCvxL_9kGYXgxzpfw-jQfrNhe1Z13_8",
+        authDomain: "music-saw-bbae8.firebaseapp.com",
+        databaseURL: "https://music-saw-bbae8-default-rtdb.firebaseio.com",
+        projectId: "music-saw-bbae8",
+        storageBucket: "music-saw-bbae8.firebasestorage.app",
+        messagingSenderId: "284347860944",
+        appId: "1:284347860944:web:5bd378945b10fff2b8dbd5"
+    };
 
+    // Inicializamos Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    // --- 2. VARIABLES GLOBALES DE DATOS ---
+    let recordings = [];
+    let artistImages = {};
+    let songProgress = {};
+    let companionsData = {}; 
+    let showTypesData = {}; 
+    
+    let isFirstLoad = true; // Para la migración
+    let currentUser = null;
+
+    // Elementos UI
     const form = document.getElementById('recordForm');
     const mainArtistsContainer = document.getElementById('mainArtistsContainer');
     const guestsContainer = document.getElementById('guestsContainer');
@@ -517,12 +572,126 @@
         "05": "Mayo", "06": "Junio", "07": "Julio", "08": "Agosto",
         "09": "Septiembre", "10": "Octubre", "11": "Noviembre", "12": "Diciembre"
     };
-
     const monthNamesShort = {
         "01": "Ene", "02": "Feb", "03": "Mar", "04": "Abr",
         "05": "May", "06": "Jun", "07": "Jul", "08": "Ago",
         "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dic"
     };
+
+    // --- 3. FUNCIONES DE AUTH Y BASE DE DATOS ---
+
+    // Iniciar sesión con redirección (Compatible con Safari, Instagram, celulares, etc.)
+    window.loginWithGoogle = function() {
+        document.getElementById('loader').style.display = 'flex';
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithRedirect(provider);
+    }
+
+    // Atrapamos los errores si el redirect falla o el usuario cancela
+    auth.getRedirectResult().catch((error) => {
+        document.getElementById('loader').style.display = 'none';
+        alert("Error al iniciar sesión: " + error.message);
+    });
+
+    window.logout = function() {
+        auth.signOut();
+    }
+
+    // Guardar TODO el estado en Firebase
+    function saveToFirebase() {
+        if (!currentUser) return;
+        const userRef = db.ref('users/' + currentUser.uid);
+        userRef.set({
+            recordings: recordings,
+            artistImagesData: artistImages,
+            songProgressData: songProgress,
+            companionsData: companionsData,
+            showTypesData: showTypesData
+        });
+    }
+
+    // Empezar a escuchar cambios en tiempo real
+    function startListeningToData(userRef) {
+        userRef.on('value', (snapshot) => {
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+
+            const data = snapshot.val() || {};
+            recordings = data.recordings || [];
+            artistImages = data.artistImagesData || {};
+            songProgress = data.songProgressData || {};
+            companionsData = data.companionsData || {};
+            showTypesData = data.showTypesData || {};
+            
+            // Actualizamos la interfaz con los datos frescos
+            renderUI();
+        });
+    }
+
+    // Autenticación de Firebase (El Puente de Migración)
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            currentUser = user;
+            
+            // Mostrar info del usuario
+            document.getElementById('userProfileBox').style.display = 'flex';
+            document.getElementById('userAvatar').src = user.photoURL || 'https://via.placeholder.com/35';
+
+            const userRef = db.ref('users/' + user.uid);
+
+            if (isFirstLoad) {
+                document.getElementById('loader').style.display = 'flex';
+                // Chequeamos si ya tiene datos en la nube una sola vez
+                userRef.once('value').then((snapshot) => {
+                    if (snapshot.exists()) {
+                        // Ya es un usuario viejo de la nube, solo escuchamos
+                        startListeningToData(userRef);
+                    } else {
+                        // ¡Usuario nuevo en la nube! Revisamos su LocalStorage
+                        const localData = localStorage.getItem('recitalData');
+                        if (localData && JSON.parse(localData).length > 0) {
+                            // Encontramos datos viejos
+                            document.getElementById('loader').style.display = 'none';
+                            if (confirm(`¡Hola ${user.displayName || ''}! Encontramos tus shows guardados en este navegador. ¿Querés subirlos a tu nueva cuenta en la nube para no perderlos?`)) {
+                                // MIGRACIÓN
+                                recordings = JSON.parse(localData) || [];
+                                artistImages = JSON.parse(localStorage.getItem('artistImagesData')) || {};
+                                songProgress = JSON.parse(localStorage.getItem('songProgressData')) || {};
+                                companionsData = JSON.parse(localStorage.getItem('companionsData')) || {};
+                                showTypesData = JSON.parse(localStorage.getItem('showTypesData')) || {};
+                                
+                                saveToFirebase(); // Lo mandamos a la nube
+                                alert('¡Migración exitosa! Tus datos ya viven en la nube ☁️');
+                                startListeningToData(userRef);
+                            } else {
+                                // No quiso migrar, empezamos de 0
+                                startListeningToData(userRef);
+                            }
+                        } else {
+                            // Usuario 100% nuevo y sin datos locales
+                            startListeningToData(userRef);
+                        }
+                    }
+                    isFirstLoad = false;
+                }).catch(err => {
+                    document.getElementById('loader').style.display = 'none';
+                    alert("Error conectando a la base de datos.");
+                });
+            }
+        } else {
+            // Nadie logueado
+            currentUser = null;
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('main-app').style.display = 'none';
+            document.getElementById('userProfileBox').style.display = 'none';
+            
+            // Limpiar variables de memoria
+            recordings = []; artistImages = {}; songProgress = {}; companionsData = {}; showTypesData = {};
+        }
+    });
+
+    // --- 4. FUNCIONES DE LA APP (Modificadas para Firebase) ---
 
     function getMainArtists(rec) {
         if (rec.mainArtists && Array.isArray(rec.mainArtists) && rec.mainArtists.length > 0) return rec.mainArtists;
@@ -732,7 +901,6 @@
         if (currP === '' && totP === '') { currP = '1'; totP = '1'; }
         
         songProgress[songNameInput] = { current: currP, total: totP }; 
-        localStorage.setItem('songProgressData', JSON.stringify(songProgress));
 
         let currentGuests = [];
         document.querySelectorAll('.guest-box:not(#mainArtistsContainer .guest-box)').forEach(box => {
@@ -763,8 +931,8 @@
         if(existingIndex >= 0) { recordings[existingIndex] = recordData; alert('¡Actualizado!'); } 
         else { recordings.push(recordData); alert('¡Guardado!'); }
 
-        localStorage.setItem('recitalData', JSON.stringify(recordings));
-        localStorage.setItem('artistImagesData', JSON.stringify(artistImages));
+        // Mándalo a Firebase en vez de LocalStorage
+        saveToFirebase();
         
         resetForm(); showPanel(lastActivePanel);
     });
@@ -790,7 +958,7 @@
         
         if (confirm('¿Estás seguro de que querés eliminar esta grabación? Esta acción no se puede deshacer.')) {
             recordings = recordings.filter(r => r.id.toString() !== idToDelete.toString());
-            localStorage.setItem('recitalData', JSON.stringify(recordings));
+            saveToFirebase(); // Actualiza Firebase
             
             alert('Grabación eliminada correctamente.');
             resetForm();
@@ -868,7 +1036,6 @@
         if (!e.target.closest('.global-search-wrapper')) { document.getElementById('globalSearchResults').style.display = 'none'; }
     });
 
-    // NUEVO: Función para el MODO NOSTALGIA
     window.triggerNostalgia = function() {
         if (recordings.length === 0) {
             alert('Aún no tenés grabaciones guardadas para recordar.');
@@ -1083,7 +1250,7 @@
             } else {
                 delete companionsData[showKey];
             }
-            localStorage.setItem('companionsData', JSON.stringify(companionsData));
+            saveToFirebase(); // Actualiza Firebase
             renderShowsView(); 
         }
     };
@@ -1103,7 +1270,7 @@
                 alert('Por favor, ingresá solamente "Recital", "Boliche" o "Festival".');
                 return;
             }
-            localStorage.setItem('showTypesData', JSON.stringify(showTypesData));
+            saveToFirebase(); // Actualiza Firebase
             renderShowsView();
         }
     };
@@ -1536,13 +1703,8 @@
                     companionsData = { ...companionsData, ...(importedData.companionsData || {}) };
                     showTypesData = { ...showTypesData, ...(importedData.showTypesData || {}) };
                     
-                    localStorage.setItem('recitalData', JSON.stringify(recordings));
-                    localStorage.setItem('artistImagesData', JSON.stringify(artistImages));
-                    localStorage.setItem('songProgressData', JSON.stringify(songProgress));
-                    localStorage.setItem('companionsData', JSON.stringify(companionsData));
-                    localStorage.setItem('showTypesData', JSON.stringify(showTypesData));
-                    
-                    alert('¡Importado correctamente!'); 
+                    saveToFirebase(); // Lo mandamos todo a la nube
+                    alert('¡Importado y guardado en la nube correctamente!'); 
                     renderUI();
                 } else {
                     alert('El archivo no tiene el formato correcto.');
@@ -1556,10 +1718,10 @@
     }
     
     function clearAllData() {
-        if (confirm('¿Seguro que querés borrar todo?')) {
-            localStorage.clear(); 
+        if (confirm('¿Seguro que querés borrar TODO tu historial en la nube? Esta acción no se puede deshacer.')) {
             recordings = []; artistImages = {}; songProgress = {}; companionsData = {}; showTypesData = {};
-            renderUI(); alert('Borrado.');
+            saveToFirebase(); // Actualizamos la nube vacía
+            renderUI(); alert('Historial borrado.');
         }
     }
 
