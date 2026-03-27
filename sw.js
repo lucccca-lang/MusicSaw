@@ -1,4 +1,4 @@
-const CACHE_NAME = 'musicsaw-v1';
+const CACHE_NAME = 'musicsaw-v2';
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {

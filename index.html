@@ -264,14 +264,20 @@
     </div>
 
     <div id="login-screen" class="login-overlay">
-<div id="login-screen" class="login-overlay">
     <div class="login-card">
         <h1 style="color: var(--accent); text-transform: uppercase; letter-spacing: 2px; margin-top: 0;">Music Saw</h1>
         <p style="color: var(--text-muted); margin-bottom: 30px;">Tu historial de recitales y shows en vivo, ahora sincronizado en la nube.</p>
-        <button class="btn-google" onclick="loginWithGoogle()">
+        
+        <button id="btn-login-google" class="btn-google" onclick="loginWithGoogle()">
             <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google Logo">
             Ingresar con Google
         </button>
+
+        <div id="webview-warning" style="display: none; background-color: rgba(255, 76, 76, 0.1); border: 1px solid var(--danger); padding: 15px; border-radius: 8px; margin-top: 20px; color: var(--text-main); font-size: 0.95em; line-height: 1.5;">
+            ⚠️ <b>¡Atención!</b><br>Estás usando el navegador de WhatsApp.<br><br>
+            Por seguridad, Google no permite iniciar sesión acá.<br><br>
+            Tocá los <b>3 puntitos</b> arriba a la derecha (o el botón de Safari abajo) y elegí <b>"Abrir en el navegador"</b> para poder entrar.
+        </div>
     </div>
 </div>
 
@@ -555,6 +561,18 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
+    // Detección automática de WhatsApp / Instagram
+    document.addEventListener("DOMContentLoaded", function() {
+        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+        // Busca rastros de navegadores internos
+        const isWebView = (userAgent.includes('Instagram') || userAgent.includes('WhatsApp') || userAgent.includes('FBAN') || userAgent.includes('FBAV') || userAgent.includes('wv'));
+        
+        if (isWebView) {
+            // Si está en WhatsApp, esconde el botón y muestra la advertencia
+            document.getElementById('btn-login-google').style.display = 'none';
+            document.getElementById('webview-warning').style.display = 'block';
+        }
+    });
 
     // --- 2. VARIABLES GLOBALES DE DATOS ---
     let recordings = [];
