@@ -259,6 +259,11 @@
 </head>
 <body>
 
+    <div id="installBanner" style="display: none; background: var(--accent); color: #000; padding: 12px; text-align: center; font-weight: bold; cursor: pointer; z-index: 99999; position: sticky; top: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+        📲 Toca acá para instalar Music Saw como App
+    </div>
+
+    <div id="login-screen" class="login-overlay">
 <div id="login-screen" class="login-overlay">
     <div class="login-card">
         <h1 style="color: var(--accent); text-transform: uppercase; letter-spacing: 2px; margin-top: 0;">Music Saw</h1>
@@ -273,9 +278,7 @@
 <div id="loader" class="loader-overlay" style="display: none;">Cargando...</div>
 
 <div class="container" id="main-app">
-    <div id="installBanner" style="display: none; background: var(--accent); color: #000; padding: 12px; text-align: center; font-weight: bold; cursor: pointer; border-radius: 8px; margin-bottom: 20px; text-transform: uppercase;">
-         Toca acá para instalar Music Saw como App
-    </div>
+    
     <div class="header-wrapper">
         <div class="user-profile" id="userProfileBox">
             <img id="userAvatar" src="" alt="Perfil" title="Logueado en Firebase">
